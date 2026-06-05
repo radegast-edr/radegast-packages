@@ -1,0 +1,74 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://github.com/rustinel-rules/schemas/ioc.schema.json",
+  "title": "Rustinel IOC set (v1)",
+  "description": "Schema for a rustinel-rules IOC set. An IOC set is the unit packs reference by id; the build flattens all referenced sets into the per-type files the Rustinel [ioc] config loads (hashes.txt, ips.txt, domains.txt, paths_regex.txt).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["id", "description", "indicators"],
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "Stable, unique set id. Convention: prefix with 'ioc-'.",
+      "pattern": "^ioc-[a-z0-9]+(-[a-z0-9]+)*$"
+    },
+    "description": {
+      "type": "string",
+      "minLength": 1
+    },
+    "os": {
+      "type": "array",
+      "description": "Operating systems the indicators are relevant to. 'common' = cross-platform.",
+      "items": { "type": "string", "enum": ["windows", "linux", "macos", "common"] },
+      "uniqueItems": true
+    },
+    "attack": {
+      "type": "array",
+      "description": "ATT&CK technique ids, e.g. [\"T1003.001\"].",
+      "items": { "type": "string", "pattern": "^T[0-9]{4}(\\.[0-9]{3})?$" },
+      "uniqueItems": true
+    },
+    "severity": {
+      "type": "string",
+      "enum": ["low", "medium", "high", "critical"]
+    },
+    "references": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "license": {
+      "type": "string"
+    },
+    "indicators": {
+      "type": "object",
+      "description": "Indicators grouped by type. At least one non-empty group is required.",
+      "additionalProperties": false,
+      "minProperties": 1,
+      "properties": {
+        "hashes": { "$ref": "#/$defs/indicatorList" },
+        "ips": { "$ref": "#/$defs/indicatorList" },
+        "domains": { "$ref": "#/$defs/indicatorList" },
+        "paths_regex": { "$ref": "#/$defs/indicatorList" }
+      }
+    }
+  },
+  "$defs": {
+    "indicatorList": {
+      "type": "array",
+      "items": {
+        "oneOf": [
+          { "type": "string", "minLength": 1 },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["value"],
+            "properties": {
+              "value": { "type": "string", "minLength": 1 },
+              "comment": { "type": "string" }
+            }
+          }
+        ]
+      }
+    }
+  }
+}
