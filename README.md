@@ -75,12 +75,12 @@ python tools/zip_pack.py --pack windows/essential     # one pack
 python tools/zip_pack.py --all                        # every pack
 ```
 
-### `upload_ragest.py` — publish packs to Radegast EDR
+### `upload_radegast.py` — publish packs to Radegast EDR
 
 Uploads built pack zips to the Radegast API. Creates the pack if it doesn't exist; uploads a new version only when the version string has changed.
 
 ```sh
-RADEGAST_API_KEY=<key> python tools/upload_ragest.py
+RADEGAST_API_KEY=<key> python tools/upload_radegast.py
 ```
 
 `RADEGAST_URL` defaults to `https://console.radegast.app`.
@@ -116,7 +116,7 @@ python tools/build_packs.py --pack windows/essential
 python tools/zip_pack.py --pack windows/essential
 
 # 5. Upload to Radegast
-RADEGAST_API_KEY=<key> python tools/upload_ragest.py
+RADEGAST_API_KEY=<key> python tools/upload_radegast.py
 ```
 
 ## License
