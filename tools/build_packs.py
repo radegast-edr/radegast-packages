@@ -15,8 +15,8 @@ Usage:
 from __future__ import annotations
 
 import argparse
-import os
 import re
+import shutil
 import sys
 import textwrap
 from pathlib import Path
@@ -235,52 +235,31 @@ def find_sigma_rule_paths(os_name: str) -> dict[str, Path]:
     return result
 
 
-def link_sigma_rules(pack: Path, os_name: str, rule_entries: list[RuleEntry]) -> None:
-    """Replace sigma files in the pack with flat relative symlinks into rules/sigma/<os_name>/."""
+def copy_sigma_rules(pack: Path, os_name: str, rule_entries: list[RuleEntry]) -> int:
+    """Copy sigma rule files from rules/sigma/<os_name>/ into the pack's sigma/ directory,
+    preserving the same subdirectory structure as the source."""
     if not rule_entries:
-        return
+        return 0
 
     sigma_dir = pack / "sigma"
     sigma_dir.mkdir(parents=True, exist_ok=True)
 
+    sigma_root = RULES_DIR / "sigma" / os_name
     rule_paths = find_sigma_rule_paths(os_name)
-    symlinked_names: set[str] = set()
+    copied = 0
 
     for entry in rule_entries:
         source = rule_paths.get(entry.rule_id)
         if source is None:
             print(f"  Warning: rule {entry.rule_id} not found in rules/sigma/{os_name}/", file=sys.stderr)
             continue
-        link_path = sigma_dir / source.name
-        if link_path.is_symlink() or link_path.exists():
-            link_path.unlink()
-        rel = Path(os.path.relpath(source, link_path.parent))
-        try:
-            link_path.symlink_to(rel)
-            symlinked_names.add(source.name)
-        except OSError as exc:
-            if getattr(exc, "winerror", None) == 1314:
-                sys.exit(
-                    "Error: creating symlinks requires Developer Mode or admin rights on Windows.\n"
-                    "Enable Developer Mode in Settings → System → For developers, then retry."
-                )
-            raise
+        rel = source.relative_to(sigma_root)
+        dest_path = sigma_dir / rel
+        dest_path.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(source, dest_path)
+        copied += 1
 
-    if not symlinked_names:
-        return
-
-    # Remove actual (non-symlink) files in subdirectories that were replaced by flat symlinks
-    for path in sorted(sigma_dir.rglob("*.yml")):
-        if not path.is_symlink() and path.parent != sigma_dir and path.name in symlinked_names:
-            path.unlink()
-
-    # Remove empty directories left behind after cleanup
-    for d in sorted(sigma_dir.rglob("*"), reverse=True):
-        if d.is_dir() and d != sigma_dir:
-            try:
-                d.rmdir()
-            except OSError:
-                pass
+    return copied
 
 
 # --------------------------------------------------------------------------- #
@@ -536,8 +515,8 @@ def build_pack(os_name: str, level: str, dry_run: bool) -> None:
     else:
         dest.write_text(content, encoding="utf-8")
         print(f"  Written: {dest.relative_to(REPO_ROOT)}")
-        link_sigma_rules(pack, os_name, all_sigma)
-        print(f"  Linked: {len(all_sigma)} sigma rule(s) as symlinks")
+        count = copy_sigma_rules(pack, os_name, all_sigma)
+        print(f"  Copied: {count} sigma rule(s) into sigma/")
 
 
 # --------------------------------------------------------------------------- #
