@@ -15,6 +15,7 @@ Usage:
 from __future__ import annotations
 
 import argparse
+import os
 import re
 import sys
 import textwrap
@@ -217,6 +218,71 @@ def scan_global_yara(os_name: str) -> set[str]:
     return names
 
 
+def find_sigma_rule_paths(os_name: str) -> dict[str, Path]:
+    """Return {rule_id: absolute_path} for every sigma rule in rules/sigma/<os_name>/."""
+    sigma_dir = RULES_DIR / "sigma" / os_name
+    result: dict[str, Path] = {}
+    if not sigma_dir.is_dir():
+        return result
+    for path in sorted(sigma_dir.rglob("*.yml")):
+        try:
+            doc = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
+        except yaml.YAMLError:
+            continue
+        rule_id = str(doc.get("id", "")).strip()
+        if rule_id and rule_id not in result:
+            result[rule_id] = path
+    return result
+
+
+def link_sigma_rules(pack: Path, os_name: str, rule_entries: list[RuleEntry]) -> None:
+    """Replace sigma files in the pack with flat relative symlinks into rules/sigma/<os_name>/."""
+    if not rule_entries:
+        return
+
+    sigma_dir = pack / "sigma"
+    sigma_dir.mkdir(parents=True, exist_ok=True)
+
+    rule_paths = find_sigma_rule_paths(os_name)
+    symlinked_names: set[str] = set()
+
+    for entry in rule_entries:
+        source = rule_paths.get(entry.rule_id)
+        if source is None:
+            print(f"  Warning: rule {entry.rule_id} not found in rules/sigma/{os_name}/", file=sys.stderr)
+            continue
+        link_path = sigma_dir / source.name
+        if link_path.is_symlink() or link_path.exists():
+            link_path.unlink()
+        rel = Path(os.path.relpath(source, link_path.parent))
+        try:
+            link_path.symlink_to(rel)
+            symlinked_names.add(source.name)
+        except OSError as exc:
+            if getattr(exc, "winerror", None) == 1314:
+                sys.exit(
+                    "Error: creating symlinks requires Developer Mode or admin rights on Windows.\n"
+                    "Enable Developer Mode in Settings → System → For developers, then retry."
+                )
+            raise
+
+    if not symlinked_names:
+        return
+
+    # Remove actual (non-symlink) files in subdirectories that were replaced by flat symlinks
+    for path in sorted(sigma_dir.rglob("*.yml")):
+        if not path.is_symlink() and path.parent != sigma_dir and path.name in symlinked_names:
+            path.unlink()
+
+    # Remove empty directories left behind after cleanup
+    for d in sorted(sigma_dir.rglob("*"), reverse=True):
+        if d.is_dir() and d != sigma_dir:
+            try:
+                d.rmdir()
+            except OSError:
+                pass
+
+
 # --------------------------------------------------------------------------- #
 # Metadata
 # --------------------------------------------------------------------------- #
@@ -412,15 +478,22 @@ def build_pack(os_name: str, level: str, dry_run: bool) -> None:
     if attack_ids:
         meta["attack_coverage"] = attack_ids
 
-    print(f"  sigma: {len(sigma):>4}   ioc: {len(ioc):>4}   yara: {len(yara):>4}   attack IDs: {len(attack_ids):>4}")
-
     # Compare pack rules against the global rules pool to compute excludes.
     global_sigma = scan_global_sigma(os_name)
     global_ioc = scan_global_ioc(os_name)
     global_yara = scan_global_yara(os_name)
 
     existing_has = (meta.get("rules") or {}).get("has") or {}
-    pack_sigma_ids = {e.rule_id for e in sigma} | set(existing_has.get("sigma") or [])
+
+    # Build the full sigma list: disk scan results + any IDs only in pack.yml's rules.has.
+    # This ensures pack.yml's sigma section is never silently zeroed out when rglob finds
+    # only symlinks (or nothing) but pack.yml already tracks the authoritative list.
+    disk_sigma_by_id = {e.rule_id: e for e in sigma}
+    yml_only_ids = set(existing_has.get("sigma") or []) - disk_sigma_by_id.keys()
+    extra_sigma = [RuleEntry(rule_id=rid, comment=global_sigma.get(rid, "")) for rid in sorted(yml_only_ids)]
+    all_sigma = list(sigma) + extra_sigma
+
+    pack_sigma_ids = {e.rule_id for e in all_sigma}
     pack_ioc_ids = {e.rule_id for e in ioc} | set(existing_has.get("ioc") or [])
     pack_yara_ids = {e.rule_id for e in yara} | set(existing_has.get("yara") or [])
 
@@ -446,13 +519,14 @@ def build_pack(os_name: str, level: str, dry_run: bool) -> None:
     exclude_comments.update({n: n for n in global_yara})
 
     exc = {k: len(v) for k, v in merged_excludes.items()}
+    print(f"  sigma: {len(sigma):>4} on disk + {len(extra_sigma):>4} from pack.yml = {len(all_sigma):>4} total")
     print(f"  global sigma: {len(global_sigma):>4}   excluded: {exc.get('sigma', 0):>4}")
     if global_ioc or exc.get("ioc", 0):
         print(f"  global ioc:   {len(global_ioc):>4}   excluded: {exc.get('ioc', 0):>4}")
     if global_yara or exc.get("yara", 0):
         print(f"  global yara:  {len(global_yara):>4}   excluded: {exc.get('yara', 0):>4}")
 
-    content = format_pack_yml(meta, sigma, ioc, yara, exclude_comments)
+    content = format_pack_yml(meta, all_sigma, ioc, yara, exclude_comments)
     dest = pack / "pack.yml"
 
     if dry_run:
@@ -462,6 +536,8 @@ def build_pack(os_name: str, level: str, dry_run: bool) -> None:
     else:
         dest.write_text(content, encoding="utf-8")
         print(f"  Written: {dest.relative_to(REPO_ROOT)}")
+        link_sigma_rules(pack, os_name, all_sigma)
+        print(f"  Linked: {len(all_sigma)} sigma rule(s) as symlinks")
 
 
 # --------------------------------------------------------------------------- #
