@@ -1,0 +1,34 @@
+name: atomic-windows
+
+on:
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: "Branch or tag to run against"
+        required: false
+        default: "feat/create-atomics"
+      filter:
+        description: "Package to run atomics on (e.g windows/essential)"
+        required: true
+        default: ""
+
+permissions:
+  contents: read
+
+jobs:
+  atomic-windows:
+    runs-on: windows-latest
+    name: windows
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Exclude workspace from Defender
+        run: Add-MpPreference -ExclusionPath "$env:GITHUB_WORKSPACE" -ErrorAction SilentlyContinue
+        shell: pwsh
+
+      - name: Install rustinel engine
+        run: |
+          Invoke-WebRequest https://raw.githubusercontent.com/Karib0u/rustinel/main/scripts/install/install.ps1 -OutFile install.ps1
+          powershell -ExecutionPolicy Bypass -File .\install.ps1 -InstallDir "$env:GITHUB_WORKSPACE\tests\atomic\.engine"
+        shell: pwsh
+
