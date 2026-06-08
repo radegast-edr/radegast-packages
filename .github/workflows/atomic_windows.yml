@@ -6,15 +6,11 @@ on:
       ref:
         description: "Branch or tag to run against"
         required: false
-        default: "master"
+        default: "feat/create-atomics"
       filter:
-        description: "Only run tests whose name/id contains this substring"
+        description: "Package to run atomics on (e.g windows/essential)"
         required: true
         default: ""
-      pack:
-        description: "Pack id to load (or 'auto')"
-        required: true
-        default: "auto"
 
 permissions:
   contents: read
