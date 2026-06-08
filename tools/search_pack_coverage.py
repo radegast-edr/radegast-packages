@@ -76,6 +76,45 @@ def split_tags(tags: list) -> tuple[list[str], list[str]]:
 
 
 # --------------------------------------------------------------------------- #
+# Technique extraction (importable)
+# --------------------------------------------------------------------------- #
+
+
+def get_techniques(pack_id: str) -> set[str]:
+    """Return uppercase technique IDs (e.g. ``T1003``, ``T1003.001``) for *pack_id*.
+
+    Reads the pre-computed ``attack_coverage`` list from pack.yml when available;
+    falls back to scanning sigma rule tags.  Calls sys.exit(1) if the pack is not found.
+    """
+    pack_dir = find_pack_dir(pack_id)
+    if pack_dir is None:
+        print(f"Error: pack '{pack_id}' not found under {REPO_ROOT / 'packs'}", file=sys.stderr)
+        sys.exit(1)
+
+    pack_yml = pack_dir / "pack.yml"
+    try:
+        data = yaml.safe_load(pack_yml.read_text(encoding="utf-8")) or {}
+    except (yaml.YAMLError, OSError):
+        data = {}
+
+    coverage = data.get("attack_coverage")
+    if coverage:
+        return {str(t).upper() for t in coverage}
+
+    # Fallback: scan sigma rules directly.
+    sigma_dir = pack_dir / "sigma"
+    if not sigma_dir.is_dir():
+        return set()
+
+    techniques: set[str] = set()
+    for _path, doc in iter_rules(sigma_dir):
+        _, tecs = split_tags(doc.get("tags") or [])
+        for tec in tecs:
+            techniques.add(tec[len("attack."):].upper())
+    return techniques
+
+
+# --------------------------------------------------------------------------- #
 # Output
 # --------------------------------------------------------------------------- #
 
