@@ -6,7 +6,7 @@ on:
       ref:
         description: "Branch or tag to run against"
         required: false
-        default: "feat/create-atomics"
+        default: "master"
       filter:
         description: "Only run tests whose name/id contains this substring"
         required: true
