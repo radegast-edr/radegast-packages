@@ -6,8 +6,8 @@ on:
       ref:
         description: "Branch or tag to run against"
         required: false
-        default: "feat/create-atomics"
-      filter:
+        default: "master"
+      pack:
         description: "Package to run atomics on (e.g windows/essential)"
         required: true
         default: ""
@@ -32,3 +32,10 @@ jobs:
           powershell -ExecutionPolicy Bypass -File .\install.ps1 -InstallDir "$env:GITHUB_WORKSPACE\tests\atomic\.engine"
         shell: pwsh
 
+      - name: Upload workspace artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: workspace-${{ github.run_id }}
+          path: ${{ github.workspace }}
+          retention-days: 7
