@@ -6,8 +6,8 @@ on:
       ref:
         description: "Branch or tag to run against"
         required: false
-        default: "feat/create-atomics"
-      filter:
+        default: "master"
+      pack:
         description: "Package to run atomics on (e.g windows/essential)"
         required: true
         default: ""
