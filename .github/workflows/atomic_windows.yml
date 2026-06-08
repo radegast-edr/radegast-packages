@@ -20,12 +20,6 @@ jobs:
     runs-on: windows-latest
     name: windows
     steps:
-      - name: Cache Gradle packages
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/$env:GITHUB_WORKSPACE\
-            
       - uses: actions/checkout@v4
 
       - name: Exclude workspace from Defender
