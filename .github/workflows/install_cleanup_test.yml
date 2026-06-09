@@ -1,4 +1,4 @@
-name: atomic-general
+name: install-cleanup-test
 
 on:
   workflow_dispatch:
@@ -7,10 +7,6 @@ on:
         description: "Branch or tag to run against"
         required: false
         default: "master"
-      pack:
-        description: "Package to run atomics on (e.g windows/essential)"
-        required: true
-        default: ""
       os:
         description: "Operating system to run on (windows or linux)"
         required: true
@@ -24,7 +20,7 @@ permissions:
   contents: read
 
 jobs:
-  atomic:
+  install-cleanup:
     runs-on: ${{ inputs.os == 'windows' && 'windows-latest' || 'ubuntu-latest' }}
     steps:
       - uses: actions/checkout@v4
@@ -34,23 +30,27 @@ jobs:
         run: Add-MpPreference -ExclusionPath "$env:GITHUB_WORKSPACE" -ErrorAction SilentlyContinue
         shell: pwsh
 
-      - name: Install Radegast (Windows)
-        if: runner.os == 'Windows'
-        env:
-          RADEGAST_KEY: ${{ secrets.RADEGAST_KEY }}
-        run: cmd /c "$env:GITHUB_WORKSPACE\tests\atomic\install_radegast.bat"
-        shell: pwsh
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
 
-      - name: Run Atomics (Windows)
-        if: runner.os == 'Windows'
-        run: pwsh "$env:GITHUB_WORKSPACE\tests\atomic\run_atomics.ps1" -Pack "${{ inputs.pack }}"
-        shell: pwsh
-
-      - name: Install Radegast (Linux)
-        if: runner.os == 'Linux'
+      - name: Install Radegast
         env:
           RADEGAST_KEY: ${{ secrets.RADEGAST_KEY }}
         run: python tests/atomic/install_radegast.py
+        shell: ${{ inputs.os == 'windows' && 'pwsh' || 'bash' }}
+
+      - name: Cleanup Radegast (Windows)
+        if: runner.os == 'Windows'
+        env:
+          RADEGAST_KEY: ${{ secrets.RADEGAST_KEY }}
+        run: cmd /c "$env:GITHUB_WORKSPACE\tests\atomic\cleanup_radegast.bat"
+        shell: pwsh
+
+      - name: Cleanup Radegast (Linux)
+        if: runner.os == 'Linux'
+        env:
+          RADEGAST_KEY: ${{ secrets.RADEGAST_KEY }}
+        run: python tests/atomic/cleanup_radegast.py
 
       - name: Upload workspace artifacts
         if: always()
@@ -59,4 +59,4 @@ jobs:
           name: workspace-${{ github.run_id }}-${{ inputs.os }}
           path: ${{ github.workspace }}
           retention-days: 7
-
+          include-hidden-files: true

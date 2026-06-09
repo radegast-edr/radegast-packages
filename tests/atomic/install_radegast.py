@@ -105,8 +105,16 @@ response.raise_for_status()
 device = response.json()
 print(f"Device registered: {device}")
 
+device_id = device["id"]
 radegast_token = device["token"]
+print(f"Device ID: {device_id}")
 print(f"RADEGAST_TOKEN: {radegast_token}")
+
+# Persist the device ID for use by cleanup_radegast.py
+device_id_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), ".radegast_device_id")
+with open(device_id_file, "w") as f:
+    f.write(str(device_id))
+print(f"Device ID saved to {device_id_file}")
 
 
 # ---------------------------------------------------------------------------
