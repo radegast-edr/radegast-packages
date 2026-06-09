@@ -1,4 +1,4 @@
-name: atomic-windows
+name: atomic-general
 
 on:
   workflow_dispatch:
