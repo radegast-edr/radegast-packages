@@ -39,11 +39,18 @@ jobs:
         run: python tests/atomic/install_radegast.py
         shell: ${{ inputs.os == 'windows' && 'pwsh' || 'bash' }}
 
-      - name: Cleanup Radegast
+      - name: Cleanup Radegast (Windows)
+        if: runner.os == 'Windows'
+        env:
+          RADEGAST_KEY: ${{ secrets.RADEGAST_KEY }}
+        run: cmd /c "$env:GITHUB_WORKSPACE\tests\atomic\cleanup_radegast.bat"
+        shell: pwsh
+
+      - name: Cleanup Radegast (Linux)
+        if: runner.os == 'Linux'
         env:
           RADEGAST_KEY: ${{ secrets.RADEGAST_KEY }}
         run: python tests/atomic/cleanup_radegast.py
-        shell: ${{ inputs.os == 'windows' && 'pwsh' || 'bash' }}
 
       - name: Upload workspace artifacts
         if: always()
