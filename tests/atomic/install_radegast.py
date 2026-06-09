@@ -55,7 +55,7 @@ try:
     import requests
 except ImportError:
     print("Installing required dependency: requests...")
-    subprocess.run([sys.executable, "-m", "pip", "install", "requests"], check=True)
+    subprocess.run(["uv", "add", "requests"], check=True)
     import requests
 
 
