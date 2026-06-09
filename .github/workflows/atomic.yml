@@ -1,0 +1,57 @@
+name: atomic-windows
+
+on:
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: "Branch or tag to run against"
+        required: false
+        default: "master"
+      pack:
+        description: "Package to run atomics on (e.g windows/essential)"
+        required: true
+        default: ""
+      os:
+        description: "Operating system to run on (windows or linux)"
+        required: true
+        default: "windows"
+        type: choice
+        options:
+          - windows
+          - linux
+
+permissions:
+  contents: read
+
+jobs:
+  atomic:
+    runs-on: ${{ inputs.os == 'windows' && 'windows-latest' || 'ubuntu-latest' }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Exclude workspace from Defender
+        if: runner.os == 'Windows'
+        run: Add-MpPreference -ExclusionPath "$env:GITHUB_WORKSPACE" -ErrorAction SilentlyContinue
+        shell: pwsh
+
+      - name: Install Radegast (Windows)
+        if: runner.os == 'Windows'
+        env:
+          RADEGAST_KEY: ${{ secrets.RADEGAST_KEY }}
+        run: cmd /c "$env:GITHUB_WORKSPACE\tests\atomic\install_radegast.bat"
+        shell: pwsh
+
+      - name: Install Radegast (Linux)
+        if: runner.os == 'Linux'
+        env:
+          RADEGAST_KEY: ${{ secrets.RADEGAST_KEY }}
+        run: python tests/atomic/install_radegast.py
+
+      - name: Upload workspace artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: workspace-${{ github.run_id }}-${{ inputs.os }}
+          path: ${{ github.workspace }}
+          retention-days: 7
+
