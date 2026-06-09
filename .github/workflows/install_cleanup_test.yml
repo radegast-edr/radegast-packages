@@ -33,11 +33,18 @@ jobs:
       - name: Install uv
         uses: astral-sh/setup-uv@v5
 
-      - name: Install Radegast
+      - name: Install Radegast (Windows)
+        if: runner.os == 'Windows'
         env:
           RADEGAST_KEY: ${{ secrets.RADEGAST_KEY }}
         run: python tests/atomic/install_radegast.py
-        shell: ${{ inputs.os == 'windows' && 'pwsh' || 'bash' }}
+        shell: pwsh
+
+      - name: Install Radegast (Linux)
+        if: runner.os == 'Linux'
+        env:
+          RADEGAST_KEY: ${{ secrets.RADEGAST_KEY }}
+        run: python tests/atomic/install_radegast.py
 
       - name: Cleanup Radegast (Windows)
         if: runner.os == 'Windows'
