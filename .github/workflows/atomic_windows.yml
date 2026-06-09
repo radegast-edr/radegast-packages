@@ -40,3 +40,4 @@ jobs:
           path: ${{ github.workspace }}
           retention-days: 7
 
+          include-hidden-files: true   # .engine/ is a dotdir, skipped otherwise
