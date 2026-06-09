@@ -32,3 +32,11 @@ jobs:
           powershell -ExecutionPolicy Bypass -File .\install.ps1 -InstallDir "$env:GITHUB_WORKSPACE\tests\atomic\.engine"
         shell: pwsh
 
+      - name: Upload workspace artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: workspace-${{ github.run_id }}
+          path: ${{ github.workspace }}
+          retention-days: 7
+
