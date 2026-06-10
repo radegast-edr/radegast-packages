@@ -37,7 +37,7 @@ jobs:
         if: runner.os == 'Windows'
         env:
           RADEGAST_KEY: ${{ secrets.RADEGAST_KEY }}
-        run: powershell.exe uv run python "$env:GITHUB_WORKSPACE\tests\atomic\install_agent_new.py"
+        run: powershell.exe uv run python "$env:GITHUB_WORKSPACE\tests\atomic\radegast_install_cleanup.py"
 
       - name: Wait 30 seconds
         if: runner.os == 'Windows'
@@ -56,7 +56,7 @@ jobs:
         if: runner.os == 'Windows'
         env:
           RADEGAST_KEY: ${{ secrets.RADEGAST_KEY }}
-        run: powershell.exe uv run python "$env:GITHUB_WORKSPACE\tests\atomic\install_agent_new.py --uninstall"
+        run: powershell.exe uv run python "$env:GITHUB_WORKSPACE\tests\atomic\radegast_install_cleanup.py --uninstall"
         
 
       - name: Cleanup Radegast (Linux)
