@@ -38,7 +38,7 @@ jobs:
         env:
           RADEGAST_KEY: ${{ secrets.RADEGAST_KEY }}
         run: uv run python "$env:GITHUB_WORKSPACE\tests\atomic\install_radegast.py"
-        shell: pwsh
+        
 
       - name: Install Radegast (Linux)
         if: runner.os == 'Linux'
