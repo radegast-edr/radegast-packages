@@ -37,7 +37,7 @@ jobs:
         if: runner.os == 'Windows'
         env:
           RADEGAST_KEY: ${{ secrets.RADEGAST_KEY }}
-        run: uv run python "$env:GITHUB_WORKSPACE\tests\atomic\install_radegast.py"
+        run: powershell.exe uv run python "$env:GITHUB_WORKSPACE\tests\atomic\install_radegast.py"
         
 
       - name: Install Radegast (Linux)
