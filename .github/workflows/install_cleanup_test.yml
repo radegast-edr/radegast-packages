@@ -38,6 +38,11 @@ jobs:
         env:
           RADEGAST_KEY: ${{ secrets.RADEGAST_KEY }}
         run: powershell.exe uv run python "$env:GITHUB_WORKSPACE\tests\atomic\install_agent_new.py"
+
+      - name: Wait 30 seconds
+        if: runner.os == 'Windows'
+        run: Start-Sleep -Seconds 30
+        shell: pwsh
         
 
       - name: Install Radegast (Linux)
