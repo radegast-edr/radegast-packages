@@ -27,6 +27,8 @@ REPO_ROOT = Path(__file__).resolve().parent.parent
 PACKS_DIR = REPO_ROOT / "packs"
 RULES_DIR = REPO_ROOT / "rules"
 
+_NON_TACTIC_RE = re.compile(r"^attack\.(t|s|g|ds)\d+", re.IGNORECASE)
+
 # Level → default extends list (template: {os} is replaced at runtime)
 _LEVEL_EXTENDS: dict[str, list[str]] = {
     "essential": [],
@@ -96,14 +98,25 @@ def _extract_attack_ids(tags: list) -> list[str]:
     return ids
 
 
-def scan_sigma(pack: Path) -> tuple[list[RuleEntry], list[str]]:
-    """Scan sigma/ and return (rule entries, sorted unique ATT&CK technique IDs)."""
+def _extract_attack_tactics(tags: list) -> list[str]:
+    """Return tactic names (e.g. privilege-escalation) from a sigma tags list."""
+    tactics = []
+    for tag in tags or []:
+        tag = str(tag)
+        if tag.lower().startswith("attack.") and not _NON_TACTIC_RE.match(tag):
+            tactics.append(tag[len("attack."):].lower())
+    return tactics
+
+
+def scan_sigma(pack: Path) -> tuple[list[RuleEntry], list[str], list[str]]:
+    """Scan sigma/ and return (rule entries, sorted technique IDs, sorted tactic names)."""
     sigma_dir = pack / "sigma"
     if not sigma_dir.is_dir():
-        return [], []
+        return [], [], []
     entries: list[RuleEntry] = []
     seen_ids: set[str] = set()
     attack_ids: set[str] = set()
+    tactic_names: set[str] = set()
     for path in sorted(sigma_dir.rglob("*.yml")):
         try:
             doc = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
@@ -116,8 +129,10 @@ def scan_sigma(pack: Path) -> tuple[list[RuleEntry], list[str]]:
         seen_ids.add(rule_id)
         title = str(doc.get("title", "")).strip()
         entries.append(RuleEntry(rule_id=rule_id, comment=title))
-        attack_ids.update(_extract_attack_ids(doc.get("tags", [])))
-    return entries, sorted(attack_ids)
+        tags = doc.get("tags", [])
+        attack_ids.update(_extract_attack_ids(tags))
+        tactic_names.update(_extract_attack_tactics(tags))
+    return entries, sorted(attack_ids), sorted(tactic_names)
 
 
 def scan_ioc(pack: Path) -> list[RuleEntry]:
@@ -326,6 +341,11 @@ def format_pack_yml(
         for t in meta["attack_coverage"]:
             ln(f"  - {t}")
 
+    if meta.get("tactic_coverage"):
+        ln("tactic_coverage:")
+        for t in meta["tactic_coverage"]:
+            ln(f"  - {t}")
+
     if meta.get("telemetry_requirements"):
         ln("telemetry_requirements:")
         for t in meta["telemetry_requirements"]:
@@ -405,14 +425,16 @@ def build_pack(os_name: str, level: str, dry_run: bool) -> None:
     existing = _read_existing(pack)
     meta = _build_meta(os_name, level, existing)
 
-    sigma, attack_ids = scan_sigma(pack)
+    sigma, attack_ids, tactic_names = scan_sigma(pack)
     ioc = scan_ioc(pack)
     yara = scan_yara(pack)
 
     if attack_ids:
         meta["attack_coverage"] = attack_ids
+    if tactic_names:
+        meta["tactic_coverage"] = tactic_names
 
-    print(f"  sigma: {len(sigma):>4}   ioc: {len(ioc):>4}   yara: {len(yara):>4}   attack IDs: {len(attack_ids):>4}")
+    print(f"  sigma: {len(sigma):>4}   ioc: {len(ioc):>4}   yara: {len(yara):>4}   attack IDs: {len(attack_ids):>4}   tactics: {len(tactic_names):>4}")
 
     # Compare pack rules against the global rules pool to compute excludes.
     global_sigma = scan_global_sigma(os_name)

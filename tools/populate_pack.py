@@ -8,6 +8,7 @@ Usage:
     python tools/populate_pack.py --os windows --tactic lateral-movement --pack hunting
     python tools/populate_pack.py --os windows --level high critical --pack hunting
     python tools/populate_pack.py --os windows --description "credential" --pack hunting --dry-run
+    python tools/populate_pack.py --os windows --level high critical --tactic execution --pack essential --sync
 
 Options:
     --os OS [OS ...]              Source OS(es) (windows, linux, macos; default: windows)
@@ -19,6 +20,9 @@ Options:
     --case-sensitive              Disable case-folding for text searches (default: insensitive)
     --dry-run                     Print matches without copying files or modifying pack.yml
     --no-update-pack-yml          Skip updating pack.yml (default: update is enabled)
+    --prune                       Remove sigma files from the pack whose IDs are not listed in pack.yml
+    --sync                        Make the pack match exactly the current criteria: add new matches and
+                                  remove any pack files whose rules do not satisfy the filters
 """
 
 from __future__ import annotations
@@ -118,6 +122,71 @@ def copy_rule(src: Path, dst: Path, dry_run: bool) -> bool:
         dst.parent.mkdir(parents=True, exist_ok=True)
         shutil.copy2(src, dst)
     return True
+
+
+# --------------------------------------------------------------------------- #
+# Pruning
+# --------------------------------------------------------------------------- #
+
+
+def load_pack_yml_ids(pack_yml_path: Path) -> set[str]:
+    """Return the set of sigma rule IDs listed under rules.has.sigma in pack.yml."""
+    if not pack_yml_path.exists():
+        return set()
+    doc = yaml.safe_load(pack_yml_path.read_text(encoding="utf-8")) or {}
+    sigma_list = ((doc.get("rules") or {}).get("has") or {}).get("sigma") or []
+    return {str(item) for item in sigma_list}
+
+
+def prune_pack_sigma(pack_sigma_dir: Path, allowed_ids: set[str], dry_run: bool) -> int:
+    """Delete sigma files whose IDs are absent from allowed_ids. Returns count removed."""
+    if not pack_sigma_dir.is_dir():
+        return 0
+    removed = 0
+    for path in sorted(pack_sigma_dir.rglob("*.yml")):
+        try:
+            doc = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
+        except yaml.YAMLError:
+            continue
+        rule_id = str(doc.get("id", ""))
+        if rule_id not in allowed_ids:
+            print(f"  [PRUNE] {path.relative_to(REPO_ROOT)}")
+            if not dry_run:
+                path.unlink()
+            removed += 1
+    if not dry_run:
+        for dirpath in sorted(pack_sigma_dir.rglob("*"), reverse=True):
+            if dirpath.is_dir() and not any(dirpath.iterdir()):
+                dirpath.rmdir()
+    return removed
+
+
+def sync_pack_sigma(pack_sigma_dir: Path, matched_ids: set[str], dry_run: bool) -> int:
+    """Remove pack files whose rule IDs are not in matched_ids (criteria-based sync).
+
+    Unlike prune_pack_sigma, the allowed set comes from the current filter run,
+    not from pack.yml — so the pack on disk ends up matching exactly what the
+    current criteria produce.  Returns count removed.
+    """
+    if not pack_sigma_dir.is_dir():
+        return 0
+    removed = 0
+    for path in sorted(pack_sigma_dir.rglob("*.yml")):
+        try:
+            doc = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
+        except yaml.YAMLError:
+            continue
+        rule_id = str(doc.get("id", ""))
+        if rule_id not in matched_ids:
+            print(f"  [SYNC-REMOVE] {path.relative_to(REPO_ROOT)}")
+            if not dry_run:
+                path.unlink()
+            removed += 1
+    if not dry_run:
+        for dirpath in sorted(pack_sigma_dir.rglob("*"), reverse=True):
+            if dirpath.is_dir() and not any(dirpath.iterdir()):
+                dirpath.rmdir()
+    return removed
 
 
 # --------------------------------------------------------------------------- #
@@ -294,6 +363,19 @@ def parse_args() -> argparse.Namespace:
         action="store_true",
         help="Skip updating pack.yml with new rule IDs",
     )
+    parser.add_argument(
+        "--prune",
+        action="store_true",
+        help="Remove sigma files from the pack whose IDs are not listed in pack.yml",
+    )
+    parser.add_argument(
+        "--sync",
+        action="store_true",
+        help=(
+            "Make the pack match exactly the current criteria: copy new matches and "
+            "remove any existing pack files whose rules do not satisfy the filters"
+        ),
+    )
     return parser.parse_args()
 
 
@@ -325,6 +407,7 @@ def main() -> None:
     total_new = 0
     total_exists = 0
     new_rules_by_os: dict[str, list[tuple[str, str]]] = {os_name: [] for os_name in target_os}
+    matched_ids_by_os: dict[str, set[str]] = {os_name: set() for os_name in target_os}
 
     for os_name, path, doc in iter_rules(target_os):
         if not matches_criteria(doc, args):
@@ -333,12 +416,16 @@ def main() -> None:
         dst = dest_path_for(path, os_name, args.pack)
         already_exists = dst.exists()
 
+        rule_id = doc.get("id", "")
+        title = doc.get("title", "")
+
+        if rule_id:
+            matched_ids_by_os[os_name].add(rule_id)
+
         if already_exists:
             total_exists += 1
         else:
             total_new += 1
-            rule_id = doc.get("id", "")
-            title = doc.get("title", "")
             if rule_id:
                 new_rules_by_os[os_name].append((rule_id, title))
 
@@ -361,6 +448,29 @@ def main() -> None:
                 added = update_pack_yml(pack_yml, new_rules)
                 if added:
                     print(f"\nUpdated {pack_yml.relative_to(REPO_ROOT)}: +{added} rule ID(s)")
+
+    if args.prune:
+        for os_name in target_os:
+            pack_yml = PACKS_DIR / os_name / args.pack / "pack.yml"
+            allowed_ids = load_pack_yml_ids(pack_yml)
+            pack_sigma_dir = PACKS_DIR / os_name / args.pack / "sigma"
+            if dry_run:
+                print(f"\n[DRY RUN] Pruning {pack_sigma_dir.relative_to(REPO_ROOT)} against {pack_yml.relative_to(REPO_ROOT)}")
+            removed = prune_pack_sigma(pack_sigma_dir, allowed_ids, dry_run)
+            if removed:
+                label = "Would remove" if dry_run else "Pruned"
+                print(f"{label} {removed} sigma file(s) not in {pack_yml.relative_to(REPO_ROOT)}")
+
+    if args.sync:
+        for os_name in target_os:
+            pack_sigma_dir = PACKS_DIR / os_name / args.pack / "sigma"
+            matched = matched_ids_by_os[os_name]
+            if dry_run:
+                print(f"\n[DRY RUN] Sync would remove pack files not matching current criteria from {pack_sigma_dir.relative_to(REPO_ROOT)}")
+            removed = sync_pack_sigma(pack_sigma_dir, matched, dry_run)
+            if removed:
+                label = "Would remove" if dry_run else "Removed"
+                print(f"\n{label} {removed} sigma file(s) from pack that did not match current criteria")
 
 
 if __name__ == "__main__":

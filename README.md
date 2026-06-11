@@ -54,6 +54,19 @@ python tools/download_sigma.py --token ghp_...        # use a GitHub token (avoi
 
 Set `GITHUB_TOKEN` to avoid the 60 req/h unauthenticated rate limit.
 
+### `populate_pack.py` — filter and sync sigma rules into a pack
+
+Copies Sigma rules from `rules/sigma/<os>/` into a pack's `sigma/` folder based on filter criteria (level, MITRE tactic, description substring, or tag). Use `--sync` to make the pack match the criteria exactly — any rule already in the pack that does not satisfy the filters is removed.
+
+```sh
+python tools/populate_pack.py --os windows --level high critical --pack essential
+python tools/populate_pack.py --os windows --level high critical --tactic execution persistence --pack essential
+python tools/populate_pack.py --os windows --level high critical --tactic execution --pack essential --dry-run
+python tools/populate_pack.py --os windows --level high critical --tactic execution --pack essential --sync
+```
+
+`--sync` is the key flag for a clean workflow: it ensures the pack on disk contains **only** the rules that match your current criteria, so the output of `build_packs.py` stays consistent.
+
 ### `build_packs.py` — rebuild pack manifests
 
 Scans each pack's `sigma/`, `ioc/`, and `yara/` subdirectories and rewrites `pack.yml` with the rules found on disk. Preserves all existing metadata and computes `rules.excludes` from the global rules pool.
