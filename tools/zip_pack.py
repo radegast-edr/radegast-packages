@@ -139,6 +139,7 @@ def build_zip(os_name: str, level: str, sigma_index: dict[str, Path]) -> None:
 
     zip_path = pack_dir / f"{pack_id}.zip"
     with zipfile.ZipFile(zip_path, "w", compression=zipfile.ZIP_DEFLATED) as zf:
+        zf.write(pack_yml, "pack.yml")
         for folder, files in (("sigma", sigma_files), ("yara", yara_files), ("ioc", ioc_files)):
             if not files:
                 zf.mkdir(folder)
