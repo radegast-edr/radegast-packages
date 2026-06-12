@@ -26,8 +26,8 @@ Subcommands:
                 matches all its sub-techniques (T1059.001, T1059.003, …). A rule is
                 included when it matches any of the given techniques OR any of the
                 given tactics.
-    list        Export all sigma rules in a pack to CSV with title, id, tactics, and
-                techniques.  No filter required — every rule in the pack is included.
+    list        Export all sigma rules in a pack to CSV with title, id, severity, tactics,
+                and techniques.  No filter required — every rule in the pack is included.
     tactics     Show how many detections each tactic has across every pack (or one pack).
                 Optionally export the breakdown as CSV.
 """
@@ -351,7 +351,7 @@ def cmd_csv(args: argparse.Namespace) -> None:
 # list subcommand
 # --------------------------------------------------------------------------- #
 
-_LIST_CSV_FIELDS = ["file", "rule_id", "title", "tactics", "techniques"]
+_LIST_CSV_FIELDS = ["file", "rule_id", "title", "severity", "tactics", "techniques"]
 
 
 def cmd_list(args: argparse.Namespace) -> None:
@@ -372,6 +372,7 @@ def cmd_list(args: argparse.Namespace) -> None:
             "file": str(path.relative_to(REPO_ROOT)),
             "rule_id": doc.get("id", ""),
             "title": doc.get("title", path.stem),
+            "severity": doc.get("level", ""),
             "tactics": ", ".join(t[len("attack."):] for t in tactics),
             "techniques": ", ".join(t[len("attack."):].upper() for t in techniques),
         })
@@ -541,7 +542,7 @@ examples:
 
     lst = sub.add_parser(
         "list",
-        help="Export all sigma rules in a pack to CSV (title, id, tactics, techniques)",
+        help="Export all sigma rules in a pack to CSV (title, id, severity, tactics, techniques)",
     )
     lst.add_argument(
         "pack",
