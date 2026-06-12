@@ -1,6 +1,6 @@
 # Windows Detection Packs
 
-Detection packs for standalone Windows workstations, organized by detection maturity and telemetry requirements. Domain-joined tactics (lateral movement, Kerberos, AD enumeration) are excluded from all packs.
+Detection packs for standalone Windows workstations, organized by detection maturity and telemetry requirements. Domain-joined tactics/techniques (lateral movement, Kerberos, AD enumeration) are excluded from all packs.
 
 All packs include only **critical** and **high** severity rules.
 
