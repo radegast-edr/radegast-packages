@@ -1,9 +1,9 @@
-name: Windows Hunting
-id: windows-hunting
+name: Windows Hunting (non-domain)
+id: windows-hunting (non-domain)
 description: >
     Windows Advanced plus broad, noisier hunting content intended for analyst-
     driven investigation. Not enabled by default and not suitable as a standing
-    alert source without tuning.
+    alert source without tuning. The pack is targeting non-domain joined computers.
 os: windows
 level: hunting
 pack_schema_version: 1

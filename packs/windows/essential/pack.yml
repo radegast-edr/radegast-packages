@@ -1,6 +1,6 @@
-name: Windows Essential
-id: windows-essential
-description: Low-noise, high-confidence Windows detections for Rustinel. Safe default pack.
+name: Windows Essential (non-domain)
+id: windows-essential (non-domain)
+description: Low-noise, high-confidence Windows detections for Rustinel. The pack is targeting non-domain joined computers.
 os: windows
 level: essential
 pack_schema_version: 1

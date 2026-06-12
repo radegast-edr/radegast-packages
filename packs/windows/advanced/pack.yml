@@ -1,5 +1,5 @@
-name: Windows Advanced
-id: windows-advanced
+name: Windows Advanced (non-domain)
+id: windows-advanced (non-domain)
 description: >
     Windows Essential plus broader production detections. More false positives
     may occur than in Essential; tune per environment before relying on by
