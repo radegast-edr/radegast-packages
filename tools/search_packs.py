@@ -8,6 +8,8 @@ Usage:
     python tools/search_packs.py csv windows/hunting --tactic execution
     python tools/search_packs.py csv windows/hunting --tactic execution persistence --output results.csv
     python tools/search_packs.py csv windows/hunting T1059 --tactic persistence
+    python tools/search_packs.py list windows/essential
+    python tools/search_packs.py list windows/essential --output pack_rules.csv
     python tools/search_packs.py tactics
     python tools/search_packs.py tactics windows/essential
     python tools/search_packs.py tactics --output tactic_coverage.csv
@@ -24,6 +26,8 @@ Subcommands:
                 matches all its sub-techniques (T1059.001, T1059.003, …). A rule is
                 included when it matches any of the given techniques OR any of the
                 given tactics.
+    list        Export all sigma rules in a pack to CSV with title, id, tactics, and
+                techniques.  No filter required — every rule in the pack is included.
     tactics     Show how many detections each tactic has across every pack (or one pack).
                 Optionally export the breakdown as CSV.
 """
@@ -344,6 +348,49 @@ def cmd_csv(args: argparse.Namespace) -> None:
 
 
 # --------------------------------------------------------------------------- #
+# list subcommand
+# --------------------------------------------------------------------------- #
+
+_LIST_CSV_FIELDS = ["file", "rule_id", "title", "tactics", "techniques"]
+
+
+def cmd_list(args: argparse.Namespace) -> None:
+    pack_dir = find_pack_dir(args.pack)
+    if pack_dir is None:
+        print(f"Error: pack '{args.pack}' not found under {REPO_ROOT / 'packs'}", file=sys.stderr)
+        sys.exit(1)
+
+    sigma_dir = pack_dir / "sigma"
+    if not sigma_dir.is_dir():
+        print(f"Error: no sigma directory found at {sigma_dir}", file=sys.stderr)
+        sys.exit(1)
+
+    rows: list[dict] = []
+    for path, doc in iter_rules(sigma_dir):
+        tactics, techniques = split_tags(doc.get("tags") or [])
+        rows.append({
+            "file": str(path.relative_to(REPO_ROOT)),
+            "rule_id": doc.get("id", ""),
+            "title": doc.get("title", path.stem),
+            "tactics": ", ".join(t[len("attack."):] for t in tactics),
+            "techniques": ", ".join(t[len("attack."):].upper() for t in techniques),
+        })
+
+    output_path = Path(args.output) if args.output else None
+
+    if output_path:
+        with output_path.open("w", newline="", encoding="utf-8") as f:
+            writer = csv.DictWriter(f, fieldnames=_LIST_CSV_FIELDS)
+            writer.writeheader()
+            writer.writerows(rows)
+        print(f"Wrote {len(rows)} rule{'s' if len(rows) != 1 else ''} to {output_path}")
+    else:
+        writer = csv.DictWriter(sys.stdout, fieldnames=_LIST_CSV_FIELDS)
+        writer.writeheader()
+        writer.writerows(rows)
+
+
+# --------------------------------------------------------------------------- #
 # tactics subcommand
 # --------------------------------------------------------------------------- #
 
@@ -436,6 +483,9 @@ examples:
   python tools/search_packs.py csv windows/hunting --tactic execution persistence
   python tools/search_packs.py csv windows/hunting T1059 --tactic persistence --output results.csv
 
+  python tools/search_packs.py list windows/essential
+  python tools/search_packs.py list windows/essential --output pack_rules.csv
+
   python tools/search_packs.py tactics
   python tools/search_packs.py tactics windows/essential
   python tools/search_packs.py tactics --output tactic_coverage.csv
@@ -489,6 +539,20 @@ examples:
         help="Write CSV to FILE; if omitted, output goes to stdout",
     )
 
+    lst = sub.add_parser(
+        "list",
+        help="Export all sigma rules in a pack to CSV (title, id, tactics, techniques)",
+    )
+    lst.add_argument(
+        "pack",
+        help="Pack path (e.g. windows/essential) or pack ID (e.g. windows-essential)",
+    )
+    lst.add_argument(
+        "--output", "-o",
+        metavar="FILE",
+        help="Write CSV to FILE; if omitted, output goes to stdout",
+    )
+
     tac = sub.add_parser(
         "tactics",
         help="Show tactic detection counts for every pack (or a single pack)",
@@ -517,6 +581,8 @@ def main() -> None:
         cmd_coverage(args)
     elif args.command == "csv":
         cmd_csv(args)
+    elif args.command == "list":
+        cmd_list(args)
     elif args.command == "tactics":
         cmd_tactics(args)
 
