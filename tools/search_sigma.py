@@ -16,7 +16,6 @@ Options:
     --os OS [OS ...]            Restrict search to one or more OS subtrees
                                 (choices: windows linux macos; default: all)
     --case-sensitive            Disable case-folding (default: case-insensitive)
-    --show-path                 Print the file path of each match
     --stats                     Print rule counts grouped by severity and tactic
 """
 
@@ -145,7 +144,7 @@ def print_stats(stats: dict) -> None:
 # --------------------------------------------------------------------------- #
 
 
-def print_match(path: Path, doc: dict, show_path: bool) -> None:
+def print_match(path: Path, doc: dict) -> None:
     title = doc.get("title", "<no title>")
     rule_id = doc.get("id", "")
     description = doc.get("description", "")
@@ -158,8 +157,7 @@ def print_match(path: Path, doc: dict, show_path: bool) -> None:
         parts.append(f"  Description: {description}")
     if level:
         parts.append(f"  Level      : {level}")
-    if show_path:
-        parts.append(f"  Path       : {path.relative_to(REPO_ROOT)}")
+    parts.append(f"  Path       : {path.relative_to(REPO_ROOT)}")
 
     print("\n".join(parts))
     print()
@@ -202,11 +200,6 @@ def parse_args() -> argparse.Namespace:
         help="Disable case-folding (default: case-insensitive)",
     )
     parser.add_argument(
-        "--show-path",
-        action="store_true",
-        help="Include the file path in output",
-    )
-    parser.add_argument(
         "--stats",
         action="store_true",
         help="Print rule counts grouped by severity and tactic, then exit",
@@ -233,7 +226,7 @@ def main() -> None:
     for path, doc in iter_rules(target_os):
         if matches(doc, args):
             count += 1
-            print_match(path, doc, args.show_path)
+            print_match(path, doc)
 
     print(f"--- {count} rule(s) matched ---")
 
