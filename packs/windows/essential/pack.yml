@@ -1,6 +1,8 @@
 name: Windows Essential (non-domain)
 id: windows-essential (non-domain)
-description: Low-noise, high-confidence Windows detections for Rustinel. The pack is targeting non-domain joined computers.
+description: >
+    Low-noise, high-confidence Windows detections for Rustinel. The pack is
+    targeting non-domain joined computers.
 os: windows
 level: essential
 pack_schema_version: 1
@@ -49,6 +51,7 @@ attack_coverage:
   - T1069
   - T1069.001
   - T1069.002
+  - T1070
   - T1071.004
   - T1082
   - T1083
@@ -70,6 +73,7 @@ attack_coverage:
   - T1202
   - T1203
   - T1204.002
+  - T1211
   - T1218
   - T1218.001
   - T1218.005
@@ -78,6 +82,9 @@ attack_coverage:
   - T1218.011
   - T1220
   - T1482
+  - T1486
+  - T1489
+  - T1505.004
   - T1518
   - T1529
   - T1543
@@ -112,6 +119,8 @@ attack_coverage:
   - T1615
   - T1620
   - T1685
+  - T1685.001
+  - T1685.005
 tactic_coverage:
   - collection
   - command-and-control
@@ -141,14 +150,23 @@ rules:
     has:
         sigma:
           - a18e0862-127b-43ca-be12-1a542c75c7c5     # LSASS Process Crashed - Application
+          - 545a5da6-f103-4919-a519-e9aec1026ee4     # Microsoft Malware Protection Engine Crash
+          - 6c82cf5c-090d-4d57-9188-533577631108     # Microsoft Malware Protection Engine Crash - WER
           - e4be5675-4a53-426a-8c81-a8bb2387e947     # CodeIntegrity - Blocked Image/Driver Load For Policy Violation
           - 9b72b82d-f1c5-4632-b589-187159bc6ec1     # CodeIntegrity - Blocked Driver Load With Revoked Certificate
+          - e8ebd53a-30c2-45bd-81bb-74befba07bdb     # HTTP Logging Disabled On IIS Server
+          - bacf58c6-e199-4040-a94f-95dea0f1e45a     # Windows Filtering Platform Blocked Connection From EDR Agent Binary
           - 17d619c1-e020-4347-957e-1d1207455c93     # Active Directory Replication from Non Machine Account
+          - f6de9536-0441-4b3f-a646-f4e00f300ffd     # Weak Encryption Enabled and Kerberoast
           - 24549159-ac1b-479c-8175-d42aea947cae     # Hacktool Ruler
+          - d99b79d2-0a6f-4f46-ad8b-260b6e17f982     # Security Eventlog Cleared
           - d7a95147-145f-4678-b85d-d1ff4a3bb3f6     # CobaltStrike Service Installations - Security
           - 611eab06-a145-4dfa-a295-3ccc5c20f59a     # Mimikatz DC Sync
+          - ab4561b1-6c7e-48a7-ad08-087cfb9ce8f1     # Important Windows Event Auditing Disabled
+          - a4c90ea1-2634-4ca0-adbb-35eae169b6fc     # ETW Logging Disabled In .NET Processes - Registry
           - 4ac1f50b-3bd0-4968-902d-868b4647937e     # DPAPI Domain Backup Key Extraction
           - a8f29a7b-b137-4446-80a0-b804272f3da2     # Persistence and Execution at Scale via GPO Scheduled Task
+          - 98054878-5eab-434c-85d4-72d4e5a3361b     # HackTool - EDRSilencer Execution - Filter Added
           - 252902e3-5830-4cf6-bf21-c22083dfd5cf     # Possible Impacket SecretDump Remote Activity
           - 4edf51e1-cb83-4e1a-bc39-800e396068e3     # Invoke-Obfuscation CLIP+ Launcher - Security
           - 0c718a5e-4284-4fb9-b4d9-b9a50b3a1974     # Invoke-Obfuscation STDIN+ Launcher - Security
@@ -160,6 +178,7 @@ rules:
           - 4c54ba8f-73d2-4d40-8890-d9cf1dca3d30     # Invoke-Obfuscation VAR++ LAUNCHER OBFUSCATION - Security
           - f0d1feba-4344-4ca9-8121-a6c97bd6df52     # Credential Dumping Tools Service Execution - Security
           - 1de68c67-af5c-4097-9c85-fe5578e09e67     # WCE wceaux.dll Access
+          - d3abac66-f11c-4ed0-8acb-50cc29c97eed     # NetNTLM Downgrade Attack
           - 13acf386-b8c6-4fe0-9a6e-c4756b974698     # Remote PowerShell Sessions Network Connections (WinRM)
           - c4e92a97-a9ff-4392-9d2d-7a4c642768ca     # Service Installed By Unusual Client - Security
           - aa1697b7-d611-4f9a-9cb2-5125b4ccfd5c     # Password Dumper Activity on LSASS
@@ -167,6 +186,8 @@ rules:
           - 3a734d25-df5c-4b99-8034-af1ddb5883a4     # Suspicious Scheduled Task Creation
           - 7595ba94-cf3b-4471-aa03-4f6baa9e5fad     # Important Scheduled Task Deleted/Disabled
           - 614cf376-6651-47c4-9dcc-6b9527f749f4     # Suspicious Scheduled Task Update
+          - 4d7f1827-1637-4def-8d8a-fd254f9454df     # Sysmon Application Crashed
+          - 100ef69e-3327-481c-8e5c-6d80d9507556     # Important Windows Eventlog Cleared
           - 39f919f3-980b-4e6f-a975-8af7e507ef2b     # Critical Hive In Suspicious Location Access Bits Cleared
           - 5a105d34-05fc-401e-8553-272b45c1522d     # CobaltStrike Service Installations - System
           - f7385ee2-0e0c-11eb-adc1-0242ac120002     # Invoke-Obfuscation CLIP+ Launcher - System
@@ -187,9 +208,17 @@ rules:
           - 1b2ae822-6fe1-43ba-aa7c-d1a3b3d1d5f2     # Service Installation with Suspicious Folder Pattern
           - 70f00d10-60b2-4f34-b9a0-dc3df3fe762a     # Suspicious Service Installation Script
           - 06d71506-7beb-4f22-8888-e2e5e2ca7fd8     # Mimikatz Use
+          - 360a1340-398a-46b6-8d06-99b905dc69d2     # Windows Defender Grace Period Expired
           - a0a278fe-2c0e-4de2-ac3c-c68b08a9ba98     # LSASS Access Detected via Attack Surface Reduction
+          - a3ab73f1-bd46-4319-8f06-4b20d0617886     # Windows Defender Exploit Guard Tamper
+          - bc275be9-0bec-4d77-8c8f-281a2df6710f     # Windows Defender Malware And PUA Scanning Disabled
           - ea9bf0fa-edec-4fb8-8b78-b119f2528186     # Windows Defender AMSI Trigger Detected
+          - b28e58e4-2a72-4fae-bdee-0fbe904db642     # Windows Defender Real-time Protection Disabled
+          - bc92ca75-cd42-4d61-9a37-9d5aa259c88b     # Win Defender Restored Quarantine File
+          - 801bd44f-ceed-4eb6-887c-11544633c0aa     # Windows Defender Configuration Changes
+          - 49e5bc24-8b86-49f1-b743-535f332c2856     # Microsoft Defender Tamper Protection Trigger
           - 57b649ef-ff42-4fb0-8bf6-62da243a1708     # Windows Defender Threat Detected
+          - 686c0b4b-9dd3-4847-9077-d6c1bbe36fcb     # Windows Defender Virus Scanning Feature Disabled
           - 2e4e488a-6164-4811-9ea1-f960c7359c40     # HackTool - CACTUSTORCH Remote Thread Creation
           - fb656378-f909-47c1-8747-278bf09f4f4f     # Potential Credential Dumping Attempt Via PowerShell Remote Thread
           - f239b326-2f41-4d6b-9dfa-c846a60ef505     # Password Dumper Remote Thread in LSASS
@@ -237,7 +266,9 @@ rules:
           - 8cde342c-ba48-4b74-b615-172c330f2e93     # Suspicious Renamed Comsvcs DLL Loaded By Rundll32
           - bdc64095-d59a-42a2-8588-71fd9c9d9abc     # Suspicious Unsigned Dbghelp/Dbgcore DLL Loaded
           - 84b0a8f3-680b-4096-a45b-e9a89221727c     # PCRE.NET Package Image Load
+          - b48492dc-c5ef-4572-8dff-32bc241c15c8     # Load Of RstrtMgr.DLL By A Suspicious Process
           - e76c8240-d68f-4773-8880-5c6f63595aaf     # Time Travel Debugging Utility Usage - Image
+          - 49329257-089d-46e6-af37-4afce4290685     # HackTool - SharpEvtMute DLL Load
           - 799a5f48-0ac1-4e0f-9152-71d137d48c2a     # Abusable DLL Potential Sideloading From Suspicious Location
           - 416bc4a2-7217-4519-8dc7-c3271817f1d5     # Suspicious Loading of Dbgcore/Dbghelp DLLs from Uncommon Location
           - 0dba975d-a193-4ed1-a067-424df57570d1     # Uncommon Network Connection Initiated By Certutil.EXE
@@ -250,6 +281,7 @@ rules:
           - 992a6cae-db6a-43c8-9cec-76d7195c96fc     # Outbound Network Connection Initiated By Script Interpreter
           - 961d0ba2-3eea-4303-a930-2cf78bbfcc5e     # HackTool - Credential Dumping Tools Named Pipe Created
           - c70e019b-1479-4b65-b0cc-cd0c6093a599     # PowerShell Called from an Executable Version Mismatch
+          - ec19ebab-72dc-40e1-9728-4c0b805d722c     # Tamper Windows Defender - PSClassic
           - 8d31a8ce-46b5-4dd6-bdc3-680931f1db86     # Bad Opsec Powershell Code Artifacts
           - 41025fd7-0466-4650-a813-574aaacbe7f4     # Malicious PowerShell Scripts - PoshModule
           - b140afd9-474b-4072-958e-2ebb435abd68     # Suspicious Get-ADDBAccount Usage
@@ -267,9 +299,12 @@ rules:
           - bbb80e91-5746-4fbe-8898-122e2cafdbf4     # Suspicious PowerShell Invocations - Generic - PowerShell Module
           - 8ff28fdd-e2fa-4dfa-aeda-ef3d61c62090     # Suspicious PowerShell Invocations - Specific - PowerShell Module
           - bf72941a-cba0-41ea-b18c-9aca3925690d     # PowerShell ADRecon Execution
+          - e0d6c087-2d1c-47fd-8799-3904103c5a98     # AMSI Bypass Pattern Assembly GetType
           - 3ceb2083-a27f-449a-be33-14ec1b7cc973     # Silence.EDA Detection
           - afd12fed-b0ec-45c9-a13d-aa86625dac81     # Create Volume Shadow Copy with Powershell
+          - 99c4658d-2c5e-4d87-828d-7c066ca537c3     # Disable-WindowsOptionalFeature Command PowerShell
           - 846c7a87-8e14-4569-9d49-ecfd4276a01c     # DSInternals Suspicious PowerShell Cmdlets - ScriptBlock
+          - 115fdba9-f017-42e6-84cf-d5573bf2ddf8     # Disable of ETW Trace - Powershell
           - 3245cd30-e015-40ff-a31d-5cadd5f377ec     # HackTool - Rubeus Execution - ScriptBlock
           - 851fd622-b675-4d26-b803-14bc7baa517a     # HackTool - WinPwn Execution - ScriptBlock
           - 73e67340-0d25-11eb-adc1-0242ac120002     # Invoke-Obfuscation CLIP+ Launcher - PowerShell
@@ -296,10 +331,14 @@ rules:
           - 84c174ab-d3ef-481f-9c86-a50d0b8e3edb     # PowerShell Get-Process LSASS in ScriptBlock
           - ed965133-513f-41d9-a441-e38076a0798f     # Suspicious PowerShell Invocations - Generic
           - ae7fbf8e-f3cb-49fd-8db4-5f3bed522c71     # Suspicious PowerShell Invocations - Specific
+          - ae2bdd58-0681-48ac-be7f-58ab4e593458     # Tamper Windows Defender Remove-MpPreference - ScriptBlockLogging
+          - 14c71865-6cd3-44ae-adaa-1db923fae5f2     # Tamper Windows Defender - ScriptBlockLogging
           - 03d83090-8cba-44a0-b02f-0b756a050306     # Potential WinAPI Calls Via PowerShell Scripts
           - 8028c2c3-e25a-46e3-827f-bbb5abf181d7     # WMImplant Hack Tool
+          - 09706624-b7f6-455d-9d02-adee024cee1d     # HackTool - CobaltStrike BOF Injection Pattern
           - d0d2f720-d14f-448d-8242-51ff396a334e     # HackTool - Generic Process Access
           - b1bd3a59-c1fd-4860-9f40-4dd161a7d1f5     # HackTool - HandleKatz Duplicating LSASS Handle
+          - d29ada0f-af45-4f27-8f32-f7b77c3dbc4e     # HackTool - SysmonEnte Execution
           - a49fa4d5-11db-418c-8473-1e014a8dd462     # Lsass Memory Dump via Comsvcs DLL
           - 9bd012ee-0dff-44d7-84a0-aa698cfd87a3     # LSASS Memory Access by Tool With Dump Keyword In Name
           - f8be3e82-46a3-4e4e-ada5-8e538ae8b9c9     # Credential Dumping Activity By Python Based Tool
@@ -308,9 +347,15 @@ rules:
           - e5b33f7d-eb93-48b6-9851-09e1e610b6d7     # Credential Dumping Attempt Via WerFault
           - 4be8b654-0c01-4c9d-a10c-6b28467fc651     # LSASS Access From Potentially White-Listed Processes
           - 9f5c1d59-33be-4e60-bcab-85d2f566effd     # Suspicious Process Access to LSASS with Dbgcore/Dbghelp DLLs
+          - 166e9c50-8cd9-44af-815d-d1f0c0e90dde     # Suspicious Svchost Process Access
+          - 387df17d-3b04-448f-8669-9e7fd5e5fd8c     # Suspicious Process Access of MsMpEng by WerFaultSecure - EDR-Freeze
           - 2f869d59-7f6a-4931-992c-cce556ff2d53     # Potential Adplus.EXE Abuse
+          - 7dbbcac2-57a0-45ac-b306-ff30a8bd2981     # Windows AMSI Related Registry Tampering Via CommandLine
           - 8e95e73e-ba02-4a87-b4d7-0929b8053038     # Suspicious ArcSOC.exe Child Process
           - 60fc936d-2eb0-4543-8a13-911c750a1dfc     # Interactive AT Job
+          - c6c56ada-612b-42d1-9a29-adad3c5c2c1e     # Audit Policy Tampering Via NT Resource Kit Auditpol
+          - 0a13e132-651d-11eb-ae93-0242ac130002     # Audit Policy Tampering Via Auditpol
+          - d7b81144-b866-48a4-9bcc-275dc69d870e     # Windows EventLog Autologger Session Registry Modification Via CommandLine
           - c80e66d8-1780-48a9-b412-46663fd21ac0     # Suspicious Autorun Registry Modified via WMI
           - 811f459f-9231-45d4-959a-0266c6311987     # Suspicious Child Process Of BgInfo.EXE
           - 8518ed3d-f7c9-4601-a26c-f361a4256a0c     # Suspicious Download From File-Sharing Website Via Bitsadmin
@@ -330,15 +375,20 @@ rules:
           - 07f8bdc2-c9b3-472a-9817-5a670b872f53     # Potential Reconnaissance For Cached Credentials Via Cmdkey.EXE
           - ee5e119b-1f75-4b34-add8-3be976961e39     # Conhost.exe CommandLine Path Traversal
           - 515c8be5-e5df-4c5e-8f6d-a4a2f05e4b48     # CreateDump Process Dump
+          - c17d47b7-dcd6-4109-87eb-d1817bd4cbc9     # Windows Credential Guard Registry Tampering Via CommandLine
           - b730a276-6b63-41b8-bcf8-55930c8fc6ee     # Csc.EXE Execution Form Potentially Suspicious Parent
           - e218595b-bbe7-4ee5-8a96-f32a24ad3468     # Suspicious Curl.EXE Download
+          - 1e8a9b4d-3c2a-4f9b-8d1e-7c6a5b4f3d2e     # PowerShell Defender Threat Severity Default Action Set to 'Allow' or 'NoAction'
+          - b9e8c7d6-a5f4-4e3d-8b1a-9f0c8d7e6a5b     # Windows Defender Context Menu Removed
           - bb58aa4a-b80b-415a-a2c0-2f65a4c81009     # Suspicious Desktopimgdownldr Command
           - 85f520e7-6f5e-43ca-874c-222e5bf9c0de     # Devcon Execution Disabling VMware VMCI Device
           - 7124aebe-4cd7-4ccb-8df0-6d6b93c96795     # Suspicious Kernel Dump Using Dtrace
           - 129966c9-de17-4334-a123-8b58172e664d     # Potential Windows Defender AV Bypass Via Dump64.EXE Rename
           - eb1c4225-1c23-4241-8dd4-051389fde4ce     # Suspicious DumpMinitool Execution
           - e7be6119-fc37-43f0-ad4f-1f3f99be2f9f     # Copying Sensitive Files with Credential Data
+          - 1a4bd6af-99ac-4466-b5b2-7b72b4a05462     # Security Event Logging Disabled via MiniNt Registry Key - Process
           - af491bca-e752-4b44-9c86-df5680533dbc     # Finger.EXE Execution
+          - 4d7cda18-1b12-4e52-b45c-d28653210df8     # Sysmon Driver Unloaded Via Fltmc.EXE
           - 44143844-0631-49ab-97a0-96387d6b2d7c     # File Download Using Notepad++ GUP Utility
           - 52cad028-0ff0-4854-8f67-d25dfcbc78b4     # HTML Help HH.EXE Suspicious Child Process
           - e8a95b5e-c891-46e2-b33a-93937d3abc31     # Suspicious HH.EXE Execution
@@ -354,6 +404,8 @@ rules:
           - 36d88494-1d43-4dc0-b3fa-35c8fea0ca9d     # HackTool - CreateMiniDump Execution
           - d474c8fe-bb69-4ea0-b7d9-f682b56d52d3     # HackTool - Doppelanger LSASS Dumper Execution
           - 2704ab9e-afe2-4854-a3b1-0c0706d03578     # HackTool - Dumpert Process Dumper Execution
+          - c598cc0c-9e70-4852-b9eb-8921af79f598     # Hacktool - EDR-Freeze Execution
+          - eb2d07d4-49cb-4523-801a-da002df36602     # HackTool - EDRSilencer Execution
           - 79f4ede3-402e-41c8-bc3e-ebbf5f162581     # HackTool - Empire PowerShell Launch Parameters
           - 24e3e58a-646b-4b50-adef-02ef935b9fc8     # Hacktool Execution - Imphash
           - 37c1333a-a0db-48be-b64b-7393b2386e3b     # Hacktool Execution - PE Metadata
@@ -371,12 +423,14 @@ rules:
           - a642964e-bead-4bed-8910-1bb4d63e3b4d     # HackTool - Mimikatz Execution
           - fca949cc-79ca-446e-8064-01aa7e52ece5     # HackTool - PCHunter Execution
           - 56c217c3-2de2-479b-990f-5c109ba8458f     # HackTool - Default PowerSploit/Empire Scheduled Task Creation
+          - a34f79a3-8e5f-4cc3-b765-de00695452c2     # HackTool - PowerTool Execution
           - a29808fd-ef50-49ff-9c7a-59a9b040b404     # HackTool - Pypykatz Credentials Dumping Activity
           - 0685b176-c816-4837-8e7b-1216f346636b     # HackTool - Quarks PwDump Execution
           - 95022b85-ff2a-49fa-939a-d7b8f56eeb9b     # HackTool - RedMimicry Winnti Playbook Execution
           - 7ec2c172-dceb-4c10-92c9-87c1881b7e18     # HackTool - Rubeus Execution
           - b1876533-4ed5-4a83-90f3-b8645840a413     # HackTool - SafetyKatz Execution
           - 26488ad0-f9fd-4536-876f-52fea846a2e4     # HackTool - SharPersist Execution
+          - bedfc8ad-d1c7-4e37-a20e-e2b0dbee759c     # HackTool - SharpEvtMute Execution
           - 42333b2c-b425-441c-b70e-99404a17170f     # HackTool - Sliver C2 Implant Activity Pattern
           - 7a4d9232-92fc-404d-8ce1-4c92e7caf539     # HackTool - Stracciatella Execution
           - 7aa7009a-28b9-4344-8c1f-159489a390df     # HackTool - Windows Credential Editor (WCE) Execution
@@ -384,31 +438,40 @@ rules:
           - d557dc06-62e8-4468-a8e8-7984124908ce     # HackTool - WinPwn Execution
           - 589ac73f-8e12-409c-964e-31a2f5775ae2     # HackTool - WSASS Execution
           - 66e563f9-1cbd-4a22-a957-d8b7c0f44372     # HackTool - XORDump Execution
+          - 6225c53a-a96e-4235-b28f-8d7997cd96eb     # Hypervisor-protected Code Integrity (HVCI) Related Registry Tampering Via CommandLine
           - 023394c4-29d5-46ab-92b8-6a534c6f447b     # Suspicious HWP Sub Processes
           - 9801abb8-e297-4dbf-9fbd-57dde0e830ad     # File Download And Execution Via IEExec.EXE
+          - e4ed6030-ffe5-4e6a-8a8a-ab3c1ab9d94e     # Disable Windows IIS HTTP Logging
           - 2d3cdeec-c0db-45b4-aa86-082f7eb75701     # Microsoft IIS Service Account Password Dumped
           - 97dbf6e2-e436-44d8-abee-4261b24d3e41     # Microsoft IIS Connection Strings Decryption
+          - cd1f961e-0b96-436b-b7c6-38da4583ec00     # Suspicious Windows Trace ETW Session Tamper Via Logman.EXE
           - cafeeba3-01da-4ab4-b6c4-a31b1d9730c7     # PrintBrm ZIP Creation of Extraction
           - f14e169e-9978-4c69-acb3-1cff8200bc36     # Suspicious GrpConv Execution
           - 0b4ae027-2a2d-4b93-8c7e-962caaba5b2a     # Time Travel Debugging Utility Usage
           - c8da0dfd-4ed0-4b68-962d-13c9c884384e     # Potential Credential Dumping Via LSASS Process Clone
           - 46123129-1024-423e-9fae-43af4a0fa9a5     # File Download Via Windows Defender MpCmpRun.EXE
+          - 9719a8aa-401c-41af-8108-ced7ec9cd75c     # Windows Defender Definition Files Removed
           - cc7abbd0-762b-41e3-8a26-57ad50d2eea3     # MSHTA Execution with Suspicious File Extensions
           - e6313acd-208c-44fc-a0ff-db85d572e90e     # Network Reconnaissance Activity
           - 55f0a3a1-846e-40eb-8273-677371b8d912     # Outlook EnableUnsafeClientMailRules Setting Enabled
           - e212d415-0e93-435f-9e1a-f29005bb4723     # Suspicious Remote Child Process From Outlook
+          - 30edb182-aa75-42c0-b0a9-e998bb29067c     # Potential AMSI Bypass Via .NET Reflection
           - ca2092a1-c273-4878-9b4b-0d60115bf5ea     # Suspicious Encoded PowerShell Command Line
           - b9d9cc83-380b-4ba3-8d8f-60c0e7e2930c     # Suspicious PowerShell Encoded Command Patterns
           - fdb62a13-9a81-4e5c-a38f-ea93a16f6d7c     # PowerShell Base64 Encoded FromBase64String Cmdlet
           - f26c6093-6f14-4b12-800f-0fcb46f5ffd0     # Malicious Base64 Encoded PowerShell Keywords in Command Lines
           - 88f680b8-070e-402c-ae11-d2914f2257f1     # PowerShell Base64 Encoded IEX Cmdlet
           - 6385697e-9f1b-40bd-8817-f4a91f40508e     # PowerShell Base64 Encoded Invoke Keyword
+          - c6fb44c6-71f5-49e6-9462-1425d328aee3     # Powershell Base64 Encoded MpPreference Cmdlet
           - 62b7ccc9-23b4-471e-aa15-6da3663c4d59     # PowerShell Base64 Encoded Reflective Assembly Load
           - 9c0295ce-d60d-40bd-bd74-84673b7592b1     # Suspicious Encoded And Obfuscated Reflection Assembly Load Function Call
           - 1816994b-42e1-4fb1-afd2-134d88184f71     # PowerShell Base64 Encoded WMI Classes
           - b6b49cd1-34d6-4ead-b1bf-176e9edba9a4     # Potential PowerShell Obfuscation Via Reversed Commands
           - d7bcd677-645d-4691-a8d4-7a5602b780d1     # Potential PowerShell Command Line Obfuscation
           - 7b6a7418-3afc-11f0-aff4-000d3abf478c     # Obfuscated PowerShell MSI Install via WindowsInstaller COM
+          - 1ec65a5f-9473-4f12-97da-622044d6df21     # Powershell Defender Disable Scan Feature
+          - a7ee1722-c3c5-aeff-3212-c777e4733217     # Disable Windows Defender AV Security Monitoring
+          - fb50eb7a-5ab1-43ae-bcc9-091818cb8424     # Disabled IE Security Features
           - 44e24481-6202-4c62-9127-5a0ae8e3fe3d     # Obfuscated PowerShell OneLiner Execution
           - 85b0b087-eddf-4a2b-b033-d771fa2b9775     # PowerShell Download and Execution Cradles
           - 43d91656-a9b2-4541-b7e2-6a9bd3a13f4e     # DSInternals Suspicious PowerShell Cmdlets
@@ -418,6 +481,7 @@ rules:
           - 02030f2f-6199-49ec-b258-ea71b07e03dc     # Malicious PowerShell Commandlets - ProcessCreation
           - e312efd0-35a1-407f-8439-b8d434b438a6     # Potential PowerShell Obfuscation Via WCHAR/CHAR
           - fb9d3ff7-7348-46ab-af8c-b55f5fbf39b4     # Execution of Powershell Script in Public Folder
+          - 07e3cb2c-0608-410d-be4b-1511cb1a0448     # Tamper Windows Defender Remove-MpPreference
           - edc2f8ae-2412-4dfd-b9d5-0c57727e70be     # Potential Powershell ReverseShell Connection
           - c83bf4b5-cdf0-437c-90fa-43d734f7c476     # Run PowerShell Script from Redirected Input Stream
           - 1af57a4b-460a-4738-9034-db68b880c665     # PowerShell SAM Copy
@@ -426,8 +490,10 @@ rules:
           - e6c54d94-498c-4562-a37c-b469d8e9a275     # Suspicious PowerShell Download and Execute Pattern
           - 36210e0d-5b19-485d-a087-c096088885f0     # Suspicious PowerShell Parameter Substring
           - 754ed792-634f-40ae-b3bc-e0448d33f695     # Suspicious PowerShell Parent Process
+          - c443012c-7928-43bf-ac20-7eda5efe61ad     # Suspicious Uninstall of Windows Defender Feature via PowerShell
           - c86133ad-4725-4bd0-8170-210788e0a7ba     # Net WebClient Casing Anomalies
           - 2fcda7e2-8c57-4904-86ac-37fc3157e09d     # Sensitive File Dump Via Print.EXE
+          - f44800ac-38ec-471f-936e-3fa7d9c53100     # PUA - CleanWipe Execution
           - d3b70aad-097e-409c-9df2-450f80dc476b     # PUA - DIT Snapshot Viewer
           - e76ca062-4de0-4d79-8d90-160a0d335eca     # PUA - Kernel Driver Utility (KDU) Execution
           - 8a1b2c3d-4e5f-6789-abcd-ef1234567890     # PUA - Memory Dump Mount Via MemProcFS
@@ -437,8 +503,17 @@ rules:
           - 480e7e51-e797-47e3-8d72-ebfce65b6d8d     # Python Spawning Pretty TTY on Windows
           - afe52666-401e-4a02-b4ff-5d128990b8cb     # Suspicious Greedy Compression Using Rar.EXE
           - edadb1e5-5919-4e4c-8462-a9e643b02c4b     # Process Memory Dump via RdrLeakDiag.EXE
+          - d7662ff6-9e97-4596-a61d-9839e32dee8d     # Add SafeBoot Keys Via Reg Utility
+          - fc0e89b5-adb0-43c1-b749-c12a10ec37de     # SafeBoot Registry Key Deleted Via Reg.EXE
+          - 05b2aa93-1210-42c8-8d9a-2fcc13b284f5     # Service Registry Key Deleted Via Reg.EXE
+          - a1b2c3d4-e5f6-a7b8-c9d0-e1f2a3b4c5d6     # Disabling Windows Defender WMI Autologger Session via Reg.exe
+          - 5e95028c-5229-4214-afae-d653d573d0ec     # Security Service Disabled Via Reg.EXE
           - fd877b94-9bb5-4191-bb25-d79cbd93c167     # Dumping of Sensitive Hives Via Reg.EXE
+          - b7e2a8d4-74bb-4b78-adc9-3f92af2d4829     # Reg Add Suspicious Paths
+          - dee4af55-1f22-4e1d-a9d2-4bdc7ecb472a     # Disabled Volume Snapshots
+          - 452bce90-6fb0-43cc-97a5-affc283139b3     # Suspicious Windows Defender Registry Key Tampering Via Reg.EXE
           - baef1ec6-2ca9-47a3-97cc-4cf2bda10b77     # Potential Credential Dumping Attempt Using New NetworkProvider - CLI
+          - 023c654f-8f16-44d9-bb2b-00ff36a62af9     # Python Function Execution Security Warning Disabled In Excel
           - 1a1ed54a-2ba4-4221-94d5-01dee560d71e     # Renamed CreateDump Utility Execution
           - 264982dc-dbad-4dce-b707-1e0d3e0f73d9     # Renamed NirCmd.EXE Execution
           - 2433a154-bb3d-42e4-86c3-a26bdac91c45     # Renamed PingCastle Binary Execution
@@ -460,7 +535,11 @@ rules:
           - 89ca78fd-b37c-4310-b3d3-81a023f83936     # Schtasks Creation Or Modification With SYSTEM Privileges
           - 9f8573c9-22b4-40e3-89c1-72bc2b8d49ab     # Scheduled Task Creation Masquerading as System Processes
           - 7d1aaf3d-4304-425c-b7c3-162055e0b3ab     # Potential Data Exfiltration Activity Via CommandLine Tools
+          - a31eeaed-3fd5-478e-a8ba-e62c6b3f9ecc     # Raccine Uninstall
           - 00d49ed5-4491-4271-a8db-650a4ef6f8c1     # Suspicious Download from Office Domain
+          - 41421f44-58f9-455d-838a-c398859841d4     # ETW Logging Tamper In .NET Processes Via CommandLine
+          - a238b5d0-ce2d-4414-a676-7a531b3d13d6     # ETW Trace Evasion Activity
+          - cc36992a-4671-4f21-a91d-6c2b72a2edf5     # Suspicious Eventlog Clearing or Configuration Change Activity
           - 69bd9b97-2be2-41b6-9816-fb08757a4d1a     # Potentially Suspicious Execution From Parent Process In Public Folder
           - 07aa184a-870d-413d-893a-157f317f6f58     # Suspicious Reconnaissance Activity Via GatherNetworkInfo.VBS
           - ffa6861c-4461-4f59-8a41-578c39f3f23e     # LSASS Dump Keyword In CommandLine
@@ -469,38 +548,75 @@ rules:
           - 1228c958-e64e-4e71-92ad-7d429f4138ba     # Script Interpreter Execution From Suspicious Folder
           - 0f60b28c-64dd-4e2c-9a63-5334d3e3a6e6     # Script Interpreter Spawning Credential Scanner - Windows
           - 17a1be64-8d88-40bf-b5ff-a4f7a50ebcc8     # Suspicious New Service Creation
+          - ce72ef99-22f1-43d4-8695-419dcb5d9330     # Suspicious Windows Service Tampering
           - 3a6586ad-127a-4d3b-a677-1e6eacdf8fde     # Windows Shell/Scripting Processes Spawning Suspicious Programs
           - 2617e7ed-adb7-40ba-b0f3-8f9945fe6c09     # Suspicious SYSTEM User Process Creation
           - 79b06761-465f-4f88-9ef2-150e24d3d737     # Potential SysInternals ProcDump Evasion
           - 5afee48e-67dd-4e03-a783-f74259dcf998     # Potential LSASS Process Dump Via Procdump
+          - 4beb6ae0-f85b-41e2-8f18-8668abc8af78     # Sysinternals PsSuspend Suspicious Execution
+          - 6a5f68d1-c4b5-46b9-94ee-5324892ea939     # Uninstall Sysinternals Sysmon
+          - 4a6713f6-3331-11ed-a261-0242ac120002     # Taskkill Symantec Endpoint Protection
+          - f0f7be61-9cf5-43be-9836-99d6ef448a18     # Uninstall Crowdstrike Falcon Sensor
           - 8f3ab69a-aa22-4943-aa58-e0a52fdf6818     # User Shell Folders Registry Modification via CommandLine
           - 236d8e89-ed95-4789-a982-36f4643738ba     # Suspicious Persistence Via VMwareToolBoxCmd.EXE VM State Change Script
           - 5687f942-867b-4578-ade7-1e341c46e99a     # VMToolsd Suspicious Child Process
+          - 22154f0e-5132-4a54-aa78-cc62f6def531     # Vulnerable Driver Blocklist Registry Tampering Via CommandLine
           - 8b93a509-1cb8-42e1-97aa-ee24224cdc15     # Sensitive File Dump Via Wbadmin.EXE
           - 84972c80-251c-4c3a-9079-4f00aad93938     # Sensitive File Recovery From Backup Via Wbadmin.EXE
           - 9a4ccd1a-3526-4d99-b980-9f9c5d3a6ff3     # Potential Credential Dumping Via WER
           - 1f0b4cac-9c81-41f4-95d0-8475ff46b3e2     # PPL Tampering Via WerFaultSecure
           - 81a0ecb5-0a41-4ba1-b2ba-c944eb92bfa2     # Add Insecure Download Source To Winget
+          - 51cbac1e-eee3-4a90-b1b7-358efb81fa0a     # Potential Windows Defender Tampering Via Wmic.EXE
           - 8d63dadf-b91b-4187-87b6-34a1114577ea     # Potential Remote SquiblyTwo Technique Execution
+          - 847d5ff3-8a31-4737-a970-aeae8fe21765     # Potential Tampering With Security Products Via WMIC
           - 99b7460d-c9f1-40d7-a316-1f36f61d52ee     # Cscript/Wscript Uncommon Script Extension Execution
           - eca8ae39-5c3c-4321-b538-9e64fe25822e     # Installation of WSL Kali-Linux
+          - d645ef86-2396-48a1-a2b6-b629ca3f57ff     # Windows Credential Guard Related Registry Value Deleted - Registry
+          - 272e55a4-9e6b-4211-acb6-78f51f0b1b40     # Folder Removed From Exploit Guard ProtectedFolders List - Registry
+          - 41d1058a-aea7-4952-9293-29eaaf516465     # Removal Of AMSI Provider Registry Keys
+          - 5a9e1b2c-8f7d-4a1e-9b3c-0f6d7e5a4b1f     # Windows Defender Threat Severity Default Action Modified
+          - 919f2ef0-be2d-4a7a-b635-eb2b41fde044     # Disable Security Events Logging Adding Reg Key MiniNt
           - 5aad0995-46ab-41bd-a9ff-724f41114971     # Esentutl Volume Shadow Copy Service Keys
           - a6b33c02-8305-488f-8585-03cb2a7763f2     # Windows Credential Editor Registry
           - f663a6d9-9d1b-49b8-b2b1-0637914d199a     # Narrator's Feedback-Hub Persistence
+          - d67572a0-e2ec-45d6-b8db-c100d14b8ef2     # NetNTLM Downgrade Attack - Registry
           - 277efb8f-60be-4f10-b4d3-037802f37167     # Registry Persistence Mechanisms in Recycle Bin
           - b98968aa-dbc0-4a9c-ac35-108363cbf8d5     # WINEKEY Registry Modification
           - 55e29995-75e7-451a-bef0-6225e2f13597     # Potential Credential Dumping Via LSASS SilentProcessExit Technique
           - eeb30123-9fbd-4ee8-aaa0-2e545bbed6dc     # Security Support Provider (SSP) Added to LSA Configuration
           - 9c5037d1-c568-49b3-88c7-9846a5bdc2be     # Suspicious Run Key from Download
           - b3503044-60ce-4bf4-bbcb-e3db98788823     # DLL Load via LSASS
+          - 160d2780-31f7-4922-8b3a-efce30e63e96     # Potential AMSI COM Server Hijacking
+          - aa37cbb0-da36-42cb-a90f-fdf216fc7467     # AMSI Disabled via Registry Modification
           - 674202d0-b22a-4af4-ae5f-2eda1f3da1af     # Bypass UAC Using Event Viewer
           - 509e84b9-a71a-40e0-834f-05470369bd1e     # Default RDP Port Changed to Non Standard Port
+          - 4916a35e-bfc4-47d0-8e25-a003d7067061     # Sysmon Driver Altitude Change
+          - 7d9263bd-dc47-4a58-bc92-5474abab390c     # Change Winevt Channel Access Permission Via Registry
           - 61a7697c-cb79-42a8-a2ff-5f0cdfae0130     # Potential CobaltStrike Service Installations - Registry
+          - 8839e550-52d7-4958-9f2f-e13c1e736838     # Security Event Logging Disabled via MiniNt Registry Key - Registry Set
+          - 73921b9c-cafd-4446-b0c6-fdb0ace42bc0     # Windows Credential Guard Disabled - Registry
+          - 31e124fb-5dc4-42a0-83b3-44a69c77b271     # Antivirus Filter Driver Disallowed On Dev Drive - Registry
+          - 8b7273a4-ba5d-4d8a-b04f-11f2900d043a     # Windows Hypervisor Enforced Code Integrity Disabled
+          - 7f2954d2-99c2-4d42-a065-ca36740f187b     # Hypervisor Enforced Paging Translation Disabled
+          - f37b4bce-49d0-4087-9f5b-58bffda77316     # Potential AutoLogger Sessions Tampering
+          - e1aa95de-610a-427d-b9e7-9b46cfafbe6a     # Windows Defender Service Disabled - Registry
           - ba226dcf-d390-4642-b9af-b534872f1156     # Windows Event Log Access Tampering Via Registry
+          - 2f78da12-f7c7-430b-8b19-a28f269b77a3     # Disable Windows Event Logging Via Registry
+          - fcddca7c-b9c0-4ddf-98da-e1e2d18b0157     # Disabled Windows Defender Eventlog
+          - 8ffc5407-52e3-478f-9596-0a7371eafe13     # Disable PUA Protection on Windows Defender
+          - bf4fc428-dcc3-4bbd-99fe-2422aeee2544     # ETW Logging Disabled In .NET Processes - Sysmon Registry
+          - 0cb8d736-995d-4ce7-a31e-1e8d452a1459     # Potential EventLog File Location Tampering
+          - 42205c73-75c8-4a63-9db1-e3782e06fda0     # Suspicious Application Allowed Through Exploit Guard
+          - 5b16df71-8615-4f7f-ac9b-6c43c0509e61     # Hide Schedule Task Via Index Value Tamper
+          - b888e3f2-224d-4435-b00b-9dd66e9ea1f1     # Uncommon Extension In Keyboard Layout IME File Registry Value
+          - 9d8f9bb8-01af-4e15-a3a2-349071530530     # Suspicious Path In Keyboard Layout IME File Registry Value
           - 3aff0be0-7802-4a7e-a4fa-c60c74bc5e1d     # Lolbas OneDriveStandaloneUpdater.exe Proxy Download
           - 33efc23c-6ea2-4503-8cfe-bdf82ce8f719     # Lsass Full Dump Request Via DumpType Registry Settings
           - e4d22291-f3d5-4b78-9a0c-a1fbaf32a6a4     # Potentially Suspicious ODBC Driver Registered
+          - a5c7a43f-6009-4a8c-80c5-32abf1c53ecc     # Microsoft Office Protected View Disabled
+          - 17e53739-a1fc-4a62-b1b9-87711c2d5e44     # Python Function Execution Security Warning Disabled In Excel - Registry
           - a7df0e9e-91a5-459a-a003-4cde67c2ff5d     # Potentially Suspicious Command Executed Via Run Dialog Box - Registry
+          - 9f4662ac-17ca-43aa-8f12-5d7b989d0101     # Tamper With Sophos AV Registry Keys
           - b7916c2a-fa2f-4795-9477-32b731f70f11     # Registry Persistence via Explorer Run Key
           - 02ee49e2-e294-4d0f-9278-f5b3212fc588     # New RUN Key Pointing to Suspicious Folder
           - 9c226817-8dc9-46c2-a58d-66655aafd7dc     # Modify User Shell Folders Startup Value
@@ -508,6 +624,8 @@ rules:
           - 73a883d0-0348-4be4-a8d8-51031c2564f8     # Potential Registry Persistence Attempt Via Windows Telemetry
           - e88a6ddc-74f7-463b-9b26-f69fc0d2ce85     # New TimeProviders Registered With Uncommon DLL Name
           - 46490193-1b22-4c29-bdd6-5bf63907216f     # VBScript Payload Stored in Registry
+          - d526c60a-e236-4011-b165-831ffa52ab70     # Windows Vulnerable Driver Blocklist Disabled
+          - 0eb46774-f1ab-4a74-8238-1155855f2263     # Disable Windows Defender Functionalities Via Registry Keys
           - bbf59793-6efb-4fa1-95ca-a7d288e52c88     # Winlogon Notify Key Logon Persistence
           - fe21810c-2a8c-478f-8dd3-5a287fb2a0e0     # Suspicious Scripting in a WMI Consumer
         ioc:
@@ -613,6 +731,7 @@ rules:
           - 0a4f6091-223b-41f6-8743-f322ec84930b     # Suspicious GUP Usage
           - 0a98a10c-685d-4ab0-bddc-b6bdd1d48458     # Uncommon Userinit Child Process
           - 0a99eb3e-1617-41bd-b095-13dc767f3def     # HackTool - Jlaive In-Memory Assembly Execution
+          - 0adc67e0-a68f-4ffd-9c43-28905aad5d6a     # HackTool - Koh Default Named Pipe
           - 0adfbc14-0ed1-11eb-adc1-0242ac120002     # Invoke-Obfuscation VAR+ Launcher - PowerShell
           - 0afbd410-de03-4078-8491-f132303cb67d     # Renamed NetSupport RAT Execution
           - 0afecb6e-6223-4a82-99fb-bf5b981e92a5     # Remote Access Tool - ScreenConnect Temporary File
@@ -649,6 +768,7 @@ rules:
           - 0e29e3a7-1ad8-40aa-b691-9f82ecd33d66     # Office Macro File Download
           - 0e4164da-94bc-450d-a7be-a4b176179f1f     # Firewall Configuration Discovery Via Netsh.EXE
           - 0e6a9e62-627e-496c-aef5-bfa39da29b5e     # MaxMpxCt Registry Value Changed
+          - 0e7163d4-9e19-4fa7-9be6-000c61aad77a     # CobaltStrike Named Pipe Pattern Regex
           - 0e8cfe08-02c9-4815-a2f8-0d157b7ed33e     # File Download with Headless Browser
           - 0ea52357-cd59-4340-9981-c46c7e900428     # Potentially Suspicious Rundll32.EXE Execution of UDL File
           - 0ea8db81-2ff6-4525-9448-33bbe7effc13     # New DMSA Service Account Created in Specific OUs
@@ -671,6 +791,7 @@ rules:
           - 1027d292-dd87-4a1a-8701-2abe04d7783c     # PSScriptPolicyTest Creation By Uncommon Process
           - 10344bb3-7f65-46c2-b915-2d00d47be5b0     # IE ZoneMap Setting Downgraded To MyComputer Zone For HTTP Protocols Via CLI
           - 104cdb48-a7a8-4ca7-a453-32942c6e5dcb     # File Download Using ProtocolHandler.exe
+          - 1070db9a-3e5d-412e-8e7b-7183b616e1b3     # Persistence Via Sticky Key Backdoor
           - 10c14723-61c7-4c75-92ca-9af245723ad2     # HackTool - Potential Impacket Lateral Movement Activity
           - 10cb6535-b31d-4512-9962-513dcbc42cc1     # PUA - System Informer Driver Load
           - 10fb649c-3600-4d37-b1e6-56ea90bb7e09     # User Added To Highly Privileged Group
@@ -818,6 +939,7 @@ rules:
           - 1f2b5353-573f-4880-8e33-7d04dcf97744     # Sysmon Configuration Modification
           - 1f49f2ab-26bc-48b3-96cc-dcffbc93eadf     # Potential Suspicious PowerShell Keywords
           - 1f6399cf-2c80-4924-ace1-6fcff3393480     # DirectorySearcher Powershell Exploitation
+          - 1f7025a6-e747-4130-aac4-961eb47015f1     # HackTool - DiagTrackEoP Default Named Pipe
           - 1fb76ab8-fa60-4b01-bddd-71e89bf555da     # Pubprn.vbs Proxy Execution
           - 1fbc0671-5596-4e17-8682-f020a0b995dc     # Potential CCleanerDU.DLL Sideloading
           - 1ff315dc-2a3a-4b71-8dde-873818d25d39     # New BITS Job Created Via Bitsadmin
@@ -831,6 +953,7 @@ rules:
           - 20d96d95-5a20-4cf1-a483-f3bda8a7c037     # Add or Remove Computer from DC
           - 20e5497e-331c-4cd5-8d36-935f6e2a9a07     # Invoke-Obfuscation COMPRESS OBFUSCATION - PowerShell
           - 20f0ee37-5942-4e45-b7d5-c5b5db9df5cd     # CurrentVersion Autorun Keys Modification
+          - 2111118f-7e46-4fc8-974a-59fd8ec95196     # DiagTrackEoP Default Login Username
           - 213d6a77-3d55-4ce8-ba74-fcfef741974e     # Private Keys Reconnaissance Via CommandLine Tools
           - 214641c2-c579-4ecb-8427-0cf19df6842e     # Remote File Download Via Desktopimgdownldr Utility
           - 214e8f95-100a-4e04-bb31-ef6cba8ce07e     # DCERPC SMB Spoolss Named Pipe
@@ -941,6 +1064,7 @@ rules:
           - 2fbbe9ff-0afc-470b-bdc0-592198339968     # Remote Access Tool - Potential MeshAgent Execution - Windows
           - 2fcda7e2-8c57-4904-86ac-37fc3157e09d     # Sensitive File Dump Via Print.EXE
           - 2fdaf50b-9fd5-449f-ba69-f17248119af6     # Network Connection Initiated via Finger.EXE
+          - 2fdefcb3-dbda-401e-ae23-f0db027628bc     # Sticky Key Like Backdoor Execution
           - 2ff692c2-4594-41ec-8fcb-46587de769e0     # CrashControl CrashDump Disabled
           - 300bac00-e041-4ee2-9c36-e262656a6ecc     # Active Directory User Backdoors
           - 3037d961-21e9-4732-b27a-637bcc7bf539     # Suspicious High IntegrityLevel Conhost Legacy Option
@@ -966,6 +1090,7 @@ rules:
           - 3236fcd0-b7e3-4433-b4f8-86ad61a9af2d     # PowerShell Download Via Net.WebClient - PowerShell Classic
           - 32410e29-5f94-4568-b6a3-d91a8adad863     # PUA - Fast Reverse Proxy (FRP) Execution
           - 3245cd30-e015-40ff-a31d-5cadd5f377ec     # HackTool - Rubeus Execution - ScriptBlock
+          - 3268b746-88d8-4cd3-bffc-30077d02c787     # HackTool - Empire PowerShell UAC Bypass
           - 327f48c1-a6db-4eb8-875a-f6981f1b0183     # Port Forwarding Activity Via SSH.EXE
           - 327ff235-94eb-4f06-b9de-aaee571324be     # Regsvr32 Execution From Highly Suspicious Location
           - 32b96012-7892-429e-b26c-ac2bf46066ff     # Shell32 DLL Execution in Suspicious Directory
@@ -1020,6 +1145,7 @@ rules:
           - 38a7625e-b2cb-485d-b83d-aff137d859f4     # Potential RemoteFXvGPUDisablement.EXE Abuse - PowerShell Module
           - 39019a4e-317f-4ce3-ae63-309a8c6b53c5     # Suspicious Scheduled Task Creation Involving Temp Folder
           - 395907ee-96e5-4666-af2e-2ca91688e151     # Wab Execution From Non Default Location
+          - 39698b3f-da92-4bc6-bfb5-645a98386e45     # Win Susp Computer Name Containing Samtheadmin
           - 396ae3eb-4174-4b9b-880e-dc0364d78a19     # Potential Persistence Via Outlook LoadMacroProviderOnBoot Setting
           - 396f6630-f3ac-44e3-bfc8-1b161bc00c4e     # Suspicious Child Process Of Wermgr.EXE
           - 39a80702-d7ca-4a83-b776-525b1f86a36d     # Potential Secure Deletion with SDelete
@@ -1154,6 +1280,7 @@ rules:
           - 48a61b29-389f-4032-b317-b30de6b95314     # Suspicious Plink Port Forwarding
           - 48bbc537-b652-4b4e-bd1d-281172df448f     # Sysinternals PsSuspend Execution
           - 48bfd177-7cf2-412b-ad77-baf923489e82     # Potentially Suspicious Volume Shadow Copy Vsstrace.dll Load
+          - 48d91a3a-2363-43ba-a456-ca71ac3da5c2     # Audit CVE Event
           - 48ea844d-19b1-4642-944e-fe39c2cc1fec     # UAC Bypass Using IDiagnostic Profile - File
           - 4916a35e-bfc4-47d0-8e25-a003d7067061     # Sysmon Driver Altitude Change
           - 4931188c-178e-4ee7-a348-39e8a7a56821     # Filter Driver Unloaded Via Fltmc.EXE
@@ -1176,6 +1303,7 @@ rules:
           - 4aafb0fa-bff5-4b9d-b99e-8093e659c65f     # Writing Local Admin Share
           - 4abc0ec4-db5a-412f-9632-26659cddf145     # UEFI Persistence Via Wpbbin - ProcessCreation
           - 4ac1f50b-3bd0-4968-902d-868b4647937e     # DPAPI Domain Backup Key Extraction
+          - 4ac47ed3-44c2-4b1f-9d51-bf46e8914126     # TrustedPath UAC Bypass Pattern
           - 4ae3e30b-b03f-43aa-87e3-b622f4048eed     # Potential Arbitrary File Download Using Office Application
           - 4ae81040-fc1c-4249-bfa3-938d260214d9     # Use Icacls to Hide File to Everyone
           - 4b046706-5789-4673-b111-66f25fe99534     # Deleted Data Overwritten Via Cipher.EXE
@@ -1240,6 +1368,7 @@ rules:
           - 514e4c3a-c77d-4cde-a00f-046425e2301e     # Abuse of Service Permissions to Hide Services Via Set-Service
           - 514e7e3e-b3b4-4a67-af60-be20f139198b     # PUA - AdFind.EXE Execution
           - 515c8be5-e5df-4c5e-8f6d-a4a2f05e4b48     # CreateDump Process Dump
+          - 516376b4-05cd-4122-bae0-ad7641c38d48     # Mailbox Export to Exchange Webserver
           - 517490a7-115a-48c6-8862-1a481504d5a8     # Potential Shim Database Persistence via Sdbinst.EXE
           - 51aa9387-1c53-4153-91cc-d73c59ae1ca9     # Invoke-Obfuscation Obfuscated IEX Invocation - System
           - 51ae86a2-e2e1-4097-ad85-c46cb6851de4     # Renamed PsExec Service Execution
@@ -1276,6 +1405,7 @@ rules:
           - 552b6b65-df37-4d3e-a258-f2fc4771ae54     # Potential Antivirus Software DLL Sideloading
           - 554601fb-9b71-4bcc-abf4-21a611be4fde     # Suspicious Recursive Takeown
           - 555155a2-03bf-4fe7-af74-d176b3fdbe16     # Driver Added To Disallowed Images In HVCI - Registry
+          - 5589ab4f-a767-433c-961d-c91f3f704db1     # Potential SMB Relay Attack Tool Execution
           - 5594e67a-7f92-4a04-b65d-1a42fd824a60     # MSI Installation From Web
           - 55c925c1-7195-426b-a136-a9396800e29b     # Potential Suspicious Windows Feature Enabled
           - 55f0a3a1-846e-40eb-8273-677371b8d912     # Outlook EnableUnsafeClientMailRules Setting Enabled
@@ -1372,6 +1502,7 @@ rules:
           - 6120ac2a-a34b-42c0-a9bd-1fb9f459f348     # AddinUtil.EXE Execution From Uncommon Directory
           - 612e47e9-8a59-43a6-b404-f48683f45bd6     # ServiceDll Hijack
           - 613c03ba-0779-4a53-8a1f-47f914a4ded3     # DNS Query To MEGA Hosting Website
+          - 614a7e17-5643-4d89-b6fe-f9df1a79641c     # Wmiprvse Wbemcomn DLL Hijack - File
           - 614cf376-6651-47c4-9dcc-6b9527f749f4     # Suspicious Scheduled Task Update
           - 61a7697c-cb79-42a8-a2ff-5f0cdfae0130     # Potential CobaltStrike Service Installations - Registry
           - 61d0475c-173f-4844-86f7-f3eebae1c66b     # Change PowerShell Policies to an Insecure Level - PowerShell
@@ -1559,6 +1690,7 @@ rules:
           - 762bb580-79b4-40f4-8b9e-9349ce1710f4     # Indirect Command Execution via SFTP ProxyCommand
           - 762f2482-ff21-4970-8939-0aa317a886bb     # HackTool - Certify Execution
           - 7638e5fe-600c-4289-a968-f49dd537ec7d     # HackTool - NetExec Execution
+          - 7679d464-4f74-45e2-9e01-ac66c5eb041a     # HackTool - SecurityXploded Execution
           - 76f55eaa-d27f-4213-9d45-7b0e4b60bbae     # Service Reconnaissance Via Wmic.EXE
           - 7707a579-e0d8-4886-a853-ce47e4575aaa     # Wmiprvse Wbemcomn DLL Hijack
           - 771d1eb5-9587-4568-95fb-9ec44153a012     # PUA - NSudo Execution
@@ -1578,6 +1710,7 @@ rules:
           - 78f10490-f2f4-4d19-a75b-4e0683bf3b8d     # Suspicious Speech Runtime Binary Child Process
           - 790317c0-0a36-4a6a-a105-6e576bf99a14     # COM Object Hijacking Via Modification Of Default System CLSID Default Value
           - 79609c82-a488-426e-abcf-9f341a39365d     # All Rules Have Been Deleted From The Windows Firewall Configuration
+          - 797011dc-44f4-4e6f-9f10-a8ceefbe566b     # WMI Backdoor Exchange Transport Agent
           - 799a5f48-0ac1-4e0f-9152-71d137d48c2a     # Abusable DLL Potential Sideloading From Suspicious Location
           - 79a87aa6-e4bd-42fc-a5bb-5e6fbdcd62f5     # Msiexec Quiet Installation
           - 79b06761-465f-4f88-9ef2-150e24d3d737     # Potential SysInternals ProcDump Evasion
@@ -1752,6 +1885,7 @@ rules:
           - 8a3038e8-9c9d-46f8-b184-66234a160f6f     # Potential Remote Desktop Tunneling
           - 8a4519e8-e64a-40b6-ae85-ba8ad2177559     # Renamed BrowserCore.EXE Execution
           - 8a582fe2-0882-4b89-a82a-da6b2dc32937     # Suspicious WmiPrvSE Child Process
+          - 8a7e90c5-fe6e-45dc-889e-057fe4378bd9     # HackTool - SysmonEOP Execution
           - 8a8379b8-780b-4dbf-b1e9-31c8d112fefb     # Schtasks From Suspicious Folders
           - 8ac03a65-6c84-4116-acad-dc1558ff7a77     # Sysmon Configuration Change
           - 8b0e12da-d3c3-49db-bb4f-256703f380e5     # PUA - Chisel Tunneling Tool Execution
@@ -1772,6 +1906,7 @@ rules:
           - 8cd538a4-62d5-4e83-810b-12d41e428d6e     # Processes Accessing the Microphone and Webcam
           - 8cde342c-ba48-4b74-b615-172c330f2e93     # Suspicious Renamed Comsvcs DLL Loaded By Rundll32
           - 8d01b53f-456f-48ee-90f6-bc28e67d4e35     # Suspicious Obfuscated PowerShell Code
+          - 8d5aca11-22b3-4f22-b7ba-90e60533e1fb     # Wmiexec Default Output File
           - 8d63dadf-b91b-4187-87b6-34a1114577ea     # Potential Remote SquiblyTwo Technique Execution
           - 8d7e392e-9b28-49e1-831d-5949c6281228     # Network Connection Initiated By IMEWDBLD.EXE
           - 8d85cf08-bf97-4260-ba49-986a2a65129c     # Suspicious PowerShell In Registry Run Keys
@@ -1948,6 +2083,7 @@ rules:
           - 9df5f547-c86a-433e-b533-f2794357e242     # Classes Autorun Keys Modification
           - 9e02c8ec-02b9-43e8-81eb-34a475ba7965     # Network Connection Initiated To BTunnels Domains
           - 9e07f6e7-83aa-45c6-998e-0af26efd0a85     # Powershell WMI Persistence
+          - 9e099d99-44c2-42b6-a6d8-54c3545cab29     # HackTool - Mimikatz Kirbi File Creation
           - 9e1a1fdf-ee58-40ce-8e15-b66ca5a80e1f     # Previously Installed IIS Module Was Removed
           - 9e2575e7-2cb9-4da1-adc8-ed94221dca5e     # New Firewall Rule Added In Windows Firewall Exception List For Potential Suspicious Application
           - 9e3357ba-09d4-4fbd-a7c5-ad6386314513     # Change the Fax Dll
@@ -2127,6 +2263,7 @@ rules:
           - b1377339-fda6-477a-b455-ac0923f9ec2c     # Remote Access Tool - AnyDesk Piped Password Via CLI
           - b140afd9-474b-4072-958e-2ebb435abd68     # Suspicious Get-ADDBAccount Usage
           - b17ea6f7-6e90-447e-a799-e6c0a493d6ce     # Shadow Copies Creation Using Operating Systems Utilities
+          - b18c9d4c-fac9-4708-bd06-dd5bfacf200f     # HackTool - F-Secure C3 Load by Rundll32
           - b19146a3-25d4-41b4-928b-1e2a92641b1b     # Remote Access Tool - ScreenConnect Server Web Shell Execution
           - b1bd3a59-c1fd-4860-9f40-4dd161a7d1f5     # HackTool - HandleKatz Duplicating LSASS Handle
           - b1c50487-1967-4315-a026-6491686d860e     # Office Macro File Creation From Suspicious Process
@@ -2201,6 +2338,7 @@ rules:
           - b7966f4a-b333-455b-8370-8ca53c229762     # Dropping Of Password Filter DLL
           - b7a3c9a3-09ea-4934-8864-6a32cacd98d9     # Zip A Folder With PowerShell For Staging In Temp - PowerShell Script
           - b7b19cb6-9b32-4fc4-a108-73f19acfe262     # Suspicious VBoxDrvInst.exe Parameters
+          - b7bc7038-638b-4ffd-880c-292c692209ef     # Certificate Request Export to Exchange Webserver
           - b7e2a8d4-74bb-4b78-adc9-3f92af2d4829     # Reg Add Suspicious Paths
           - b7ec41a4-042c-4f31-a5db-d0fcde9fa5c5     # PowerShell PSAttack
           - b85e5894-9b19-4d86-8c87-a2f3b81f0521     # BITS Transfer Job Downloading File Potential Suspicious Extension
@@ -2227,6 +2365,7 @@ rules:
           - ba4cfc11-d0fa-4d94-bf20-7c332c412e76     # Potentially Suspicious DLL Registered Via Odbcconf.EXE
           - bab049ca-7471-4828-9024-38279a4c04da     # Virtualbox Driver Installation or Starting of VMs
           - bac9fb54-2da7-44e9-988f-11e9a5edbc0c     # Potential Password Spraying Attempt Using Dsacls.EXE
+          - baca5663-583c-45f9-b5dc-ea96a22ce542     # Sticky Key Like Backdoor Usage - Registry
           - bacf58c6-e199-4040-a94f-95dea0f1e45a     # Windows Filtering Platform Blocked Connection From EDR Agent Binary
           - baecf8fb-edbf-429f-9ade-31fc3f22b970     # Office Autorun Keys Modification
           - baef1ec6-2ca9-47a3-97cc-4cf2bda10b77     # Potential Credential Dumping Attempt Using New NetworkProvider - CLI
@@ -2312,6 +2451,7 @@ rules:
           - c443012c-7928-43bf-ac20-7eda5efe61ad     # Suspicious Uninstall of Windows Defender Feature via PowerShell
           - c453ab7a-1f5c-4716-a3b4-dea8135fb43a     # Registry Manipulation via WMI Stdregprov
           - c462f537-a1e3-41a6-b5fc-b2c2cef9bf82     # Suspicious PsExec Execution
+          - c484e533-ee16-4a93-b6ac-f0ea4868b2f1     # HackTool - SharpUp PrivEsc Tool Execution
           - c49c5062-0966-4170-9efd-9968c913a6cf     # Stop Windows Service Via PowerShell Stop-Service
           - c4b890e5-8d8c-4496-8c66-c805753817cd     # Potential Process Hollowing Activity
           - c4e49831-1496-40cf-8ce1-b53f942b02f9     # Renamed PAExec Execution
@@ -2470,6 +2610,8 @@ rules:
           - d522eca2-2973-4391-a3e0-ef0374321dae     # Abused Debug Privilege by Arbitrary Parent Processes
           - d526c60a-e236-4011-b165-831ffa52ab70     # Windows Vulnerable Driver Blocklist Disabled
           - d557dc06-62e8-4468-a8e8-7984124908ce     # HackTool - WinPwn Execution
+          - d55b793d-f847-4eea-b59a-5ab09908ac90     # Suspicious Child Process Of Veeam Dabatase
+          - d5601f8c-b26f-4ab0-9035-69e11a8d4ad2     # CobaltStrike Named Pipe
           - d5866ddf-ce8f-4aea-b28e-d96485a20d3d     # Files With System Process Name In Unsuspected Locations
           - d58ba5c6-0ed7-4b9d-a433-6878379efda9     # Remote Access Tool - AnyDesk Incoming Connection
           - d59d7842-9a21-4bc6-ba98-64bfe0091355     # Powershell DNSExfiltration
@@ -2486,6 +2628,7 @@ rules:
           - d75d6b6b-adb9-48f7-824b-ac2e786efe1f     # Suspicious FromBase64String Usage On Gzip Archive - Process Creation
           - d7654f02-e04b-4934-9838-65c46f187ebc     # PUA- IOX Tunneling Tool Execution
           - d7662ff6-9e97-4596-a61d-9839e32dee8d     # Add SafeBoot Keys Via Reg Utility
+          - d78b5d61-187d-44b6-bf02-93486a80de5a     # HackTool - DInjector PowerShell Cradle Execution
           - d797268e-28a9-49a7-b9a8-2f5039011c5c     # Bypass UAC via WSReset.exe
           - d7a63acb-1284-49bc-bfea-7771146c8b1c     # Potential Vcruntime140 DLL Sideloading
           - d7a95147-145f-4678-b85d-d1ff4a3bb3f6     # CobaltStrike Service Installations - Security
@@ -2714,6 +2857,7 @@ rules:
           - f0e2b768-5220-47dd-b891-d57b96fc0ec1     # CSExec Service File Creation
           - f0e53e89-8d22-46ea-9db5-9d4796ee2f8a     # Exports Registry Key To a File
           - f0f7be61-9cf5-43be-9836-99d6ef448a18     # Uninstall Crowdstrike Falcon Sensor
+          - f1086bf7-a0c4-4a37-9102-01e573caf4a0     # Renamed Whoami Execution
           - f10ed525-97fe-4fed-be7c-2feecca941b1     # Persistence Via Hhctrl.ocx
           - f117933c-980c-4f78-b384-e3d838111165     # Windows Share Mount Via Net.EXE
           - f11f2808-adb4-46c0-802a-8660db50fa99     # ImagingDevices Unusual Parent/Child Processes
@@ -2789,6 +2933,7 @@ rules:
           - f7997770-92c3-4ec9-b112-774c4ef96f96     # Winlogon AllowMultipleTSSessions Enable
           - f7b5f842-a6af-4da5-9e95-e32478f3cd2f     # MsiExec Web Install
           - f7d7ebd5-a016-46e2-9c54-f9932f2d386d     # Potential RDP Tunneling Via SSH
+          - f7f9ab88-7557-4a69-b30e-0a8f91b3a0e7     # Registry Entries For Azorult Malware
           - f8748f2c-89dc-4d95-afb0-5a2dfdbad332     # SAM Registry Hive Handle Request
           - f88e112a-21aa-44bd-9b01-6ee2a2bbbed1     # Failed Logon From Public IP
           - f8931561-97f5-4c46-907f-0a4a592e47a7     # CodeIntegrity - Unmet Signing Level Requirements By File Under Validation
@@ -2847,6 +2992,7 @@ rules:
           - fe20dda1-6f37-4379-bbe0-a98d400cae90     # Potential Persistence Via Scrobj.dll COM Hijacking
           - fe21810c-2a8c-478f-8dd3-5a287fb2a0e0     # Suspicious Scripting in a WMI Consumer
           - fe3a2d49-f255-4d10-935c-bda7391108eb     # New BITS Job Created Via PowerShell
+          - fe3ac066-98bb-432a-b1e7-a5229cb39d4a     # Malicious Named Pipe Created
           - fe5ce7eb-dad8-467c-84a9-31ec23bd644a     # SyncAppvPublishingServer Bypass Powershell Restriction - PS Module
           - fe63010f-8823-4864-a96b-a7b4a0f7b929     # LSASS Process Reconnaissance Via Findstr.EXE
           - fec96f39-988b-4586-b746-b93d59fd1922     # ScreenConnect Temporary Installation Artefact

@@ -35,7 +35,7 @@ Basic coverage targeting commodity threats and known-bad patterns. High-confiden
 | T1053 | Persistence | Scheduled Task / Job |
 | T1543 | Persistence | Create or Modify System Process |
 | T1082 | Discovery | System Information Discovery |
-| T1562 | Defense Evasion | Impair Defenses |
+| T1685 | Defense Evasion | Disable or Modify Tools |
 | T1003 | Credential Access | OS Credential Dumping |
 | T1105 | Command & Control | Ingress Tool Transfer |
 
@@ -46,7 +46,7 @@ python tools/populate_pack.py \
   --os windows \
   --pack essential \
   --level critical high \
-  --technique T1059 T1547 T1053 T1543 T1082 T1562 T1003 T1105
+  --technique T1059 T1547 T1053 T1543 T1082 T1685 T1003 T1105
 ```
 
 ---
