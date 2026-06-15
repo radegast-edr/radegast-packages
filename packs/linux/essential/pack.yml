@@ -11,32 +11,98 @@ status: experimental
 license: DRL-1.1
 extends: []
 attack_coverage:
-  - T1574.006
-  - T1098.004
-  - T1548.003
-  - T1059.004
-  - T1105
-  - T1505.003
-  - T1562.001
-  - T1496
+- T1574.006
+- T1098.004
+- T1548.003
+- T1059.004
+- T1105
+- T1505.003
+- T1562.001
+- T1496
 telemetry_requirements:
-  - process_creation
-  - file_event
-  - file_scan
+- process_creation
+- file_event
+- file_scan
 test_status: none
 sources:
-    manual:
-      - https://attack.mitre.org/
+  manual:
+  - https://attack.mitre.org/
 rules:
-    has:
-        sigma:
-          - 0a1b2c3d-4e5f-4061-8a72-9b0c1d2e3f40   # Dynamic Linker Hijacking via ld.so.preload (sigma)
-          - 1b2c3d4e-5f60-4172-9b83-0c1d2e3f4a51   # SSH authorized_keys Created or Replaced (sigma)
-          - 2c3d4e5f-6071-4283-8c94-1d2e3f4a5b62   # Sudoers Configuration Tampering (sigma)
-          - a3c5c821-004a-4e52-8684-0f7f9ea0404c   # Linux Reverse Shell via /dev/tcp (sigma)
-          - 8fd4d1d9-38cf-4704-8009-00e41a009c98   # Linux Web Server Spawning Interactive Shell (sigma)
-          - 9ac8732e-1818-4cda-89ac-01ca08a7b836   # SSH Daemon Configuration Tampering (sigma)
-        yara:
-          - yara-lnx-xmrig-coinminer                # XMRig / coinminer strings in Linux ELF binaries (yara)
-        ioc:
-          - ioc-eicar-test                         # EICAR safe end-to-end IOC test set (ioc)                         # EICAR safe end-to-end IOC test set (ioc)                         # EICAR safe end-to-end IOC test set (ioc)
+  has:
+    sigma:
+    - 0a1b2c3d-4e5f-4061-8a72-9b0c1d2e3f40         # Dynamic Linker Hijacking via ld.so.preload (sigma)
+    - 1b2c3d4e-5f60-4172-9b83-0c1d2e3f4a51         # SSH authorized_keys Created or Replaced (sigma)
+    - 2c3d4e5f-6071-4283-8c94-1d2e3f4a5b62         # Sudoers Configuration Tampering (sigma)
+    - a3c5c821-004a-4e52-8684-0f7f9ea0404c         # Linux Reverse Shell via /dev/tcp (sigma)
+    - 8fd4d1d9-38cf-4704-8009-00e41a009c98         # Linux Web Server Spawning Interactive Shell (sigma)
+    - 9ac8732e-1818-4cda-89ac-01ca08a7b836         # SSH Daemon Configuration Tampering (sigma)
+    - fe10751f-1995-40a5-aaa2-c97ccb4123fe         # Linux Capabilities Discovery
+    - 1543ae20-cbdf-4ec1-8d12-7664d667a825         # Suspicious Commands Linux
+    - 2625cc59-0634-40d0-821e-cb67382a3dd7         # Service Reload or Start - Linux
+    - 49aae26c-450e-448b-911d-b3c13d178dfc         # Linux Keylogging with Pam.d
+    - f34047d9-20d3-4e8b-8672-0a35cc50dc71         # System Information Discovery - Auditd
+    - 808146b2-9332-4d78-9416-d7e47012d83d         # BPFDoor Abnormal Process ID or Lock File Accessed
+    - ea61bb82-a5e0-42e6-8537-91d29500f1b9         # Potential Abuse of Linux Magic System Request Key
+    - 1f358e2e-cb63-43c3-b575-dfb072a6814f         # System and Hardware Information Discovery
+    - 1bac86ba-41aa-4f62-9d6b-405eac99b485         # Systemd Service Creation
+    - b207d563-a1d9-4275-b349-77d1eb55aa6d         # System Info Discovery via Sysinfo Syscall
+    - 710bdbce-495d-491d-9a8f-7d0d88d2b41e         # Special File Creation via Mknod Syscall
+    - af202fd3-7bff-4212-a25a-fb34606cfcbe         # Modifying Crontab
+    - 41e5c73d-9983-4b69-bd03-e13b67e9623c         # Equation Group Indicators
+    - 7a14080d-a048-4de8-ae58-604ce58a795b         # Remote File Copy
+    - 2aa1440c-9ae9-4d92-84a7-a9e5f5e31695         # Suspicious Activity in Shell Commands
+    - 738d9bcf-6999-4fdb-b4ac-3033037db8ab         # Suspicious Reverse Shell Command Line
+    - 8ec2c8b4-557a-4121-b87c-5dfb3a602fae         # JexBoss Command Sequence
+    - 00eee2a5-fdb0-4746-a21d-e43fbdea5681         # Linux Doas Conf File Creation
+    - ddb26b76-4447-4807-871f-1b035b2bfa5d         # Persistence Via Sudoers.d Files
+    - 6c4e2f43-d94d-4ead-b64d-97e53fa2bd05         # New Cron File Created
+    - 179b3686-6271-4d87-807d-17d843a8af73         # Suspicious Filename with Embedded Base64 Commands
+    - 1a2ea919-d11d-4d1e-8535-06cda13be20f         # Triple Cross eBPF Rootkit Default Persistence
+    - 35a05c60-9012-49b6-a11f-6bab741c9f74         # Wget Creating Files in Tmp Directory
+    - 83dcd9f6-9ca8-4af7-a16e-a1c7a6b51871         # Linux Reverse Shell Indicator
+    - d2d642d7-b393-43fe-bae4-e81ed5915c4b         # Scheduled Task/Job At
+    - 8c1a5675-cb85-452f-a298-b01b22a51856         # Suspicious Invocation of Shell via AWK - Linux
+    - f8341cb2-ee25-43fa-a975-d8a5a9714b39         # BPFtrace Unsafe Option Usage
+    - 3a716279-c18c-4488-83be-f9ececbfb9fc         # Linux Setgid Capability Set on a Binary via Setcap Utility
+    - ed447910-bc30-4575-a598-3a2e49516a7a         # Linux Setuid Capability Set on a Binary via Setcap Utility
+    - db1ac3be-f606-4e3a-89e0-9607cbe6b98a         # Capsh Shell Invocation - Linux
+    - ea34fb97-e2c4-4afb-810f-785e4459b194         # Curl Usage on Linux
+    - a2d9e2f3-0f43-4c7a-bcd9-9acfc0d723aa         # Suspicious Download and Execute Pattern via Curl/Wget
+    - 067d8238-7127-451c-a9ec-fa78045b618b         # Linux Doas Tool Execution
+    - bed978f8-7f3a-432b-82c5-9286a9b3031a         # Shell Invocation via Env Command - Linux
+    - 33e814e0-1f00-4e43-9c34-31fb7ae2b174         # ESXi Network Configuration Discovery Via ESXCLI
+    - 9691f58d-92c1-4416-8bf3-2edd753ec9cf         # ESXi Admin Permission Assigned To Account Via ESXCLI
+    - f41dada5-3f56-4232-8503-3fb7f9cf2d60         # ESXi Storage Information Discovery Via ESXCLI
+    - 38eb1dbb-011f-40b1-a126-cf03a0210563         # ESXi Syslog Configuration Change Via ESXCLI
+    - e80273e1-9faf-40bc-bd85-dbaff104c4e9         # ESXi System Information Discovery Via ESXCLI
+    - b28e4eb3-8bbc-4f0c-819f-edfe8e2f25db         # ESXi Account Creation Via ESXCLI
+    - 5f1573a7-363b-4114-9208-ad7a61de46eb         # ESXi VM List Discovery Via ESXCLI
+    - 2992ac4d-31e9-4325-99f2-b18a73221bb2         # ESXi VM Kill Via ESXCLI
+    - d54c2f06-aca9-4e2b-81c9-5317858f4b79         # ESXi VSAN Information Discovery Via ESXCLI
+    - 47b3bbd4-1bf7-48cc-84ab-995362aaa75a         # Shell Execution via Git - Linux
+    - d27ab432-2199-483f-a297-03633c05bae6         # OS Architecture Discovery Via Grep
+    - e34cfa0c-0a50-4210-9cb3-5632d08eb041         # Potential GobRAT File Discovery Via Grep
+    - 7f734ed0-4f47-46c0-837f-6ee62505abd9         # Potential Netcat Reverse Shell Execution
+    - e4ffe466-6ff8-48d4-94bd-e32d1a6061e2         # Nohup Execution
+    - 55e862a8-dd9c-4651-807a-f21fcad56716         # Python One-Liners with Base64 Decoding - Linux
+    - c4042d54-110d-45dd-a0e1-05c47822c937         # Python Spawning Pretty TTY Via PTY Module
+    - 2d2f44ff-4611-4778-a8fc-323a0e9850cc         # Inline Python Execution - Spawn Shell Via OS System Library
+    - e2326866-609f-4015-aea9-7ec634e8aa04         # Shell Execution via Rsync - Linux
+    - 297241f3-8108-4b3a-8c15-2dda9f844594         # Suspicious Invocation of Shell via Rsync
+    - 6b14bac8-3e3a-4324-8109-42f0546a347f         # Scheduled Cron Task/Job - Linux
+    - c21c4eaa-ba2e-419a-92b2-8371703cbe21         # Setuid and Setgid
+    - 8737b7f6-8df3-4bb7-b1da-06019b99b687         # Shell Invocation Via Ssh - Linux
+    - 746c86fb-ccda-4816-8997-01386263acc4         # Container Residence Discovery Via Proc Virtual FS
+    - 00b90cc1-17ec-402c-96ad-3a8117d7a582         # Suspicious Curl File Upload - Linux
+    - 11701de9-d5a5-44aa-8238-84252f131895         # Docker Container Discovery Via Dockerenv Listing
+    - 43e26eb5-cd58-48d1-8ce9-a273f5d298d8         # Potential Container Discovery Via Inodes Listing
+    - ea3ecad2-db86-4a89-ad0b-132a10d2db55         # Interactive Bash Suspicious Children
+    - d292e0af-9a18-420c-9525-ec0ac3936892         # Suspicious Java Children Processes
+    - f0025a69-e1b7-4dda-a53c-db21fa2d4071         # Script Interpreter Spawning Credential Scanner - Linux
+    - 42df45e7-e6e9-43b5-8f26-bec5b39cc239         # System Information Discovery
+    - cf610c15-ed71-46e1-bdf8-2bd1a99de6c4         # Download File To Potentially Suspicious Directory Via Wget
+    - 4e25af4b-246d-44ea-8563-e42aacab006b         # Potential Xterm Reverse Shell
+    yara:
+    - yara-lnx-xmrig-coinminer                      # XMRig / coinminer strings in Linux ELF binaries (yara)
+    ioc:
+    - ioc-eicar-test                               # EICAR safe end-to-end IOC test set (ioc)                         # EICAR safe end-to-end IOC test set (ioc)                         # EICAR safe end-to-end IOC test set (ioc)
