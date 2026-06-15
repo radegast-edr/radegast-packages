@@ -7,7 +7,7 @@ pack_schema_version: 1
 requires_rustinel: ">=1.0.2"
 default: true
 expected_false_positive_level: low
-status: experimental
+status: Beta
 license: DRL-1.1
 extends: []
 attack_coverage:
