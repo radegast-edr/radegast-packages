@@ -1,5 +1,5 @@
-name: Linux Advanced
-id: linux-advanced
+name: Linux Advanced (non-domain)
+id: linux-advanced (non-domain)
 description: >
     Linux Essential plus broader production detections. More false positives may
     occur than in Essential (notably from package installs); tune per

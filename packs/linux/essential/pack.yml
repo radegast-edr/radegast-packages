@@ -1,5 +1,5 @@
-name: Linux Essential
-id: linux-essential
+name: Linux Essential (non-domain)
+id: linux-essential (non-domain)
 description: Low-noise, high-confidence Linux detections for Rustinel. Safe default pack.
 os: linux
 level: essential

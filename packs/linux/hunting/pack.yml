@@ -1,6 +1,8 @@
 name: Linux Hunting (non-domain)
 id: linux-hunting (non-domain)
-description: High noise detection package. The audience of this package is advanced users who want to dive more into the system's operations and security concepts.
+description: >
+    High noise detection package. The audience of this package is advanced users
+    who want to dive more into the system's operations and security concepts.
 os: linux
 level: hunting
 pack_schema_version: 1
