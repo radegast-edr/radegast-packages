@@ -28,7 +28,7 @@ from pathlib import Path
 from typing import TypedDict
 
 import yaml
-from requests import get, post
+from requests import get, patch, post
 
 # ---------------------------------------------------------------------------
 # .env loader
@@ -112,6 +112,7 @@ def _read_pack_meta(os_name: str, level: str) -> dict:
         "raw_id": raw_id,
         "pack_id": f"radegast-{safe_id}",
         "pack_name": f"Radegast: {doc.get('name', f'{os_name}/{level}')}",
+        "description": doc.get("description", ""),
         "zip_path": pack_dir / f"{raw_id}.zip",
     }
 
@@ -166,6 +167,8 @@ def upload_pack(
     pack_id: str = meta["pack_id"]
     pack_name: str = meta["pack_name"]
 
+    description: str = meta["description"]
+
     remote_pack = next((p for p in remote_packs if p["pack_id"] == pack_id), None)
     if remote_pack is None:
         print(f"[*] Creating new pack {pack_id} -- {pack_name}")
@@ -175,6 +178,7 @@ def upload_pack(
             json={
                 "pack_id": pack_id,
                 "name": pack_name,
+                "description": description,
             },
         )
         _raise(r)
@@ -184,6 +188,17 @@ def upload_pack(
             pack_id=body["pack_id"],
             newest_version=None,
         )
+    else:
+        r = patch(
+            f"{RADEGAST_URL}/api/v1/packs/{remote_pack['id']}",
+            headers={"X-API-Key": RADEGAST_API_KEY},
+            json={
+                "pack_id": pack_id,
+                "name": pack_name,
+                "description": description,
+            },
+        )
+        _raise(r)
 
     new_version = _bump_version(remote_pack["newest_version"])
     print(f"[*] Uploading {pack_id} version {new_version}")
