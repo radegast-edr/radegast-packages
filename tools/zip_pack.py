@@ -135,8 +135,6 @@ def build_zip(os_name: str, level: str, sigma_index: dict[str, Path]) -> None:
     print(f"  yara:  {len(yara_files):>4} files")
     print(f"  ioc:   {len(ioc_files):>4} files")
 
-    all_files = sigma_files + yara_files + ioc_files
-
     zip_path = pack_dir / f"{pack_id}.zip"
     with zipfile.ZipFile(zip_path, "w", compression=zipfile.ZIP_DEFLATED) as zf:
         zf.write(pack_yml, "pack.yml")
