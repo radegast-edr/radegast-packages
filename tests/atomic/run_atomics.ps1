@@ -24,6 +24,12 @@
     powershell -ExecutionPolicy Bypass -File run_atomics.ps1 -Technique T1003
     powershell -ExecutionPolicy Bypass -File run_atomics.ps1 -Pack "windows/essential" -MappingFile "map.json"
     powershell -ExecutionPolicy Bypass -File run_atomics.ps1 -Technique T1003 -MappingFile "map.json"
+
+.NOTES
+    RECOMMENDATION: It is highly recommended to run tests one technique at a time
+    using -Technique (e.g. -Technique T1003) rather than running an entire pack.
+    Executing all pack techniques in a single session can cause irreversible changes,
+    system instability, or data loss on the test machine.
 #>
 param(
     [Parameter(Mandatory = $false)]
@@ -54,6 +60,30 @@ if ((Get-ExecutionPolicy) -ne 'Bypass') {
 
 $scriptDir = Split-Path -Parent $PSCommandPath
 $repoRoot  = Split-Path -Parent (Split-Path -Parent $scriptDir)
+
+# ---------------------------------------------------------------------------
+# Pre-flight: exactly one sigma rule pack must be installed
+# ---------------------------------------------------------------------------
+$preflightSigmaDir = $null
+foreach ($drv in @([System.IO.DriveInfo]::GetDrives() |
+        Where-Object { $_.DriveType -eq 'Fixed' -and $_.IsReady } |
+        ForEach-Object { $_.Name })) {
+    $candidate = Join-Path $drv "Program Files\Radegast\agent\rules\sigma"
+    if (Test-Path $candidate) { $preflightSigmaDir = $candidate; break }
+}
+
+if ($preflightSigmaDir) {
+    $sigmaSubFolders = @(Get-ChildItem -Path $preflightSigmaDir -Directory -ErrorAction SilentlyContinue)
+    if ($sigmaSubFolders.Count -gt 1) {
+        Write-Error (
+            "Multiple sigma rule packs detected in $preflightSigmaDir " +
+            "($($sigmaSubFolders.Count) folders: $($sigmaSubFolders.Name -join ', ')). " +
+            "The system must have exactly ONE sigma pack assigned to ensure accurate atomic test results. " +
+            "Remove the extra pack(s) and re-run."
+        )
+        exit 1
+    }
+}
 
 if ($Pack) {
     $packRelPath = $Pack.Replace('/', '\').Replace('\', [System.IO.Path]::DirectorySeparatorChar)
