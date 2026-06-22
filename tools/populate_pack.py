@@ -9,20 +9,24 @@ Usage:
     python tools/populate_pack.py --os windows --level high critical --pack hunting
     python tools/populate_pack.py --os windows --description "credential" --pack hunting --dry-run
     python tools/populate_pack.py --os windows --level high critical --tactic execution --pack essential --sync
+    python tools/populate_pack.py --os windows --technique T1059 --pack hunting
+    python tools/populate_pack.py --os windows --technique T1059.001 T1078 --pack hunting
 
 Options:
-    --os OS [OS ...]              Source OS(es) (windows, linux, macos; default: windows)
-    --pack PACK                   Destination pack name, e.g. hunting, advanced, essential
-    --level LEVEL [LEVEL ...]     Filter by severity level(s): critical, high, medium, low, informational
-    --tactic TACTIC [TACTIC ...]  Filter by MITRE ATT&CK tactic(s), e.g. lateral-movement, persistence
-    --description TEXT            Substring match against rule description
-    --tag TAG [TAG ...]           Rule must carry all listed tags (exact match)
-    --case-sensitive              Disable case-folding for text searches (default: insensitive)
-    --dry-run                     Print matches without copying files or modifying pack.yml
-    --no-update-pack-yml          Skip updating pack.yml (default: update is enabled)
-    --prune                       Remove sigma files from the pack whose IDs are not listed in pack.yml
-    --sync                        Make the pack match exactly the current criteria: add new matches and
-                                  remove any pack files whose rules do not satisfy the filters
+    --os OS [OS ...]                  Source OS(es) (windows, linux, macos; default: windows)
+    --pack PACK                       Destination pack name, e.g. hunting, advanced, essential
+    --level LEVEL [LEVEL ...]         Filter by severity level(s): critical, high, medium, low, informational
+    --tactic TACTIC [TACTIC ...]      Filter by MITRE ATT&CK tactic(s), e.g. lateral-movement, persistence
+    --technique TECHNIQUE [...]       Filter by MITRE ATT&CK technique ID(s), e.g. T1059, T1059.001
+                                      Case-insensitive. A parent ID (T1059) also matches sub-techniques.
+    --description TEXT                Substring match against rule description
+    --tag TAG [TAG ...]               Rule must carry all listed tags (exact match)
+    --case-sensitive                  Disable case-folding for text searches (default: insensitive)
+    --dry-run                         Print matches without copying files or modifying pack.yml
+    --no-update-pack-yml              Skip updating pack.yml (default: update is enabled)
+    --prune                           Remove sigma files from the pack whose IDs are not listed in pack.yml
+    --sync                            Make the pack match exactly the current criteria: add new matches and
+                                      remove any pack files whose rules do not satisfy the filters
 """
 
 from __future__ import annotations
@@ -85,6 +89,16 @@ def matches_criteria(doc: dict, args: argparse.Namespace) -> bool:
             if tag.startswith("attack.") and not _NON_TACTIC_RE.match(tag):
                 rule_tactics.add(tag[len("attack."):])
         if not {t.lower() for t in args.tactic} & rule_tactics:
+            return False
+
+    if args.technique:
+        tags = [t.lower() for t in (doc.get("tags") or [])]
+        matched = any(
+            tag == f"attack.{tech.lower()}" or tag.startswith(f"attack.{tech.lower()}.")
+            for tech in args.technique
+            for tag in tags
+        )
+        if not matched:
             return False
 
     if args.description:
@@ -338,6 +352,15 @@ def parse_args() -> argparse.Namespace:
         help="Filter by MITRE ATT&CK tactic(s), e.g. lateral-movement, persistence",
     )
     parser.add_argument(
+        "--technique",
+        nargs="+",
+        metavar="TECHNIQUE",
+        help=(
+            "Filter by MITRE ATT&CK technique ID(s), e.g. T1059 or T1059.001. "
+            "Case-insensitive. A parent ID (T1059) also matches all its sub-techniques."
+        ),
+    )
+    parser.add_argument(
         "--description",
         metavar="TEXT",
         help="Substring to match against the rule description field",
@@ -395,8 +418,8 @@ def main() -> None:
     args = parse_args()
     target_os = tuple(args.os)
 
-    if not any([args.level, args.tactic, args.description, args.tag]):
-        print("Error: at least one filter is required (--level, --tactic, --description, --tag).")
+    if not any([args.level, args.tactic, args.technique, args.description, args.tag]):
+        print("Error: at least one filter is required (--level, --tactic, --technique, --description, --tag).")
         print("Run with --help for usage.")
         sys.exit(1)
 

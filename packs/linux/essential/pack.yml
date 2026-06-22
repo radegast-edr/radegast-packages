@@ -1,5 +1,5 @@
-name: Linux Essential
-id: linux-essential
+name: Linux Essential (non-domain)
+id: linux-essential (non-domain)
 description: Low-noise, high-confidence Linux detections for Rustinel. Safe default pack.
 os: linux
 level: essential
@@ -7,18 +7,58 @@ pack_schema_version: 1
 requires_rustinel: ">=1.0.2"
 default: true
 expected_false_positive_level: low
-status: experimental
+status: Beta
 license: DRL-1.1
 extends: []
 attack_coverage:
-  - T1574.006
-  - T1098.004
-  - T1548.003
+  - T1003
+  - T1005
+  - T1007
+  - T1027
+  - T1027.010
+  - T1033
+  - T1036
+  - T1053.002
+  - T1053.003
+  - T1056.001
+  - T1057
+  - T1059
   - T1059.004
+  - T1059.006
+  - T1059.012
+  - T1082
+  - T1083
+  - T1098
   - T1105
-  - T1505.003
-  - T1562.001
-  - T1496
+  - T1106
+  - T1136
+  - T1203
+  - T1489
+  - T1499
+  - T1529
+  - T1543.002
+  - T1543.003
+  - T1548
+  - T1548.001
+  - T1548.003
+  - T1552
+  - T1554
+  - T1567
+  - T1685
+  - T1690
+tactic_coverage:
+  - collection
+  - command-and-control
+  - credential-access
+  - defense-impairment
+  - discovery
+  - execution
+  - exfiltration
+  - impact
+  - lateral-movement
+  - persistence
+  - privilege-escalation
+  - stealth
 telemetry_requirements:
   - process_creation
   - file_event
@@ -30,13 +70,216 @@ sources:
 rules:
     has:
         sigma:
-          - 0a1b2c3d-4e5f-4061-8a72-9b0c1d2e3f40   # Dynamic Linker Hijacking via ld.so.preload (sigma)
-          - 1b2c3d4e-5f60-4172-9b83-0c1d2e3f4a51   # SSH authorized_keys Created or Replaced (sigma)
-          - 2c3d4e5f-6071-4283-8c94-1d2e3f4a5b62   # Sudoers Configuration Tampering (sigma)
-          - a3c5c821-004a-4e52-8684-0f7f9ea0404c   # Linux Reverse Shell via /dev/tcp (sigma)
-          - 8fd4d1d9-38cf-4704-8009-00e41a009c98   # Linux Web Server Spawning Interactive Shell (sigma)
-          - 9ac8732e-1818-4cda-89ac-01ca08a7b836   # SSH Daemon Configuration Tampering (sigma)
-        yara:
-          - yara-lnx-xmrig-coinminer                # XMRig / coinminer strings in Linux ELF binaries (yara)
+          - fe10751f-1995-40a5-aaa2-c97ccb4123fe     # Linux Capabilities Discovery
+          - 1543ae20-cbdf-4ec1-8d12-7664d667a825     # Suspicious Commands Linux
+          - 2625cc59-0634-40d0-821e-cb67382a3dd7     # Service Reload or Start - Linux
+          - 49aae26c-450e-448b-911d-b3c13d178dfc     # Linux Keylogging with Pam.d
+          - f34047d9-20d3-4e8b-8672-0a35cc50dc71     # System Information Discovery - Auditd
+          - 808146b2-9332-4d78-9416-d7e47012d83d     # BPFDoor Abnormal Process ID or Lock File Accessed
+          - ea61bb82-a5e0-42e6-8537-91d29500f1b9     # Potential Abuse of Linux Magic System Request Key
+          - 1f358e2e-cb63-43c3-b575-dfb072a6814f     # System and Hardware Information Discovery
+          - 1bac86ba-41aa-4f62-9d6b-405eac99b485     # Systemd Service Creation
+          - b207d563-a1d9-4275-b349-77d1eb55aa6d     # System Info Discovery via Sysinfo Syscall
+          - 710bdbce-495d-491d-9a8f-7d0d88d2b41e     # Special File Creation via Mknod Syscall
+          - af202fd3-7bff-4212-a25a-fb34606cfcbe     # Modifying Crontab
+          - 41e5c73d-9983-4b69-bd03-e13b67e9623c     # Equation Group Indicators
+          - 7a14080d-a048-4de8-ae58-604ce58a795b     # Remote File Copy
+          - 2aa1440c-9ae9-4d92-84a7-a9e5f5e31695     # Suspicious Activity in Shell Commands
+          - 738d9bcf-6999-4fdb-b4ac-3033037db8ab     # Suspicious Reverse Shell Command Line
+          - 8ec2c8b4-557a-4121-b87c-5dfb3a602fae     # JexBoss Command Sequence
+          - 00eee2a5-fdb0-4746-a21d-e43fbdea5681     # Linux Doas Conf File Creation
+          - ddb26b76-4447-4807-871f-1b035b2bfa5d     # Persistence Via Sudoers.d Files
+          - 6c4e2f43-d94d-4ead-b64d-97e53fa2bd05     # New Cron File Created
+          - 179b3686-6271-4d87-807d-17d843a8af73     # Suspicious Filename with Embedded Base64 Commands
+          - 1a2ea919-d11d-4d1e-8535-06cda13be20f     # Triple Cross eBPF Rootkit Default Persistence
+          - 35a05c60-9012-49b6-a11f-6bab741c9f74     # Wget Creating Files in Tmp Directory
+          - 83dcd9f6-9ca8-4af7-a16e-a1c7a6b51871     # Linux Reverse Shell Indicator
+          - d2d642d7-b393-43fe-bae4-e81ed5915c4b     # Scheduled Task/Job At
+          - 8c1a5675-cb85-452f-a298-b01b22a51856     # Suspicious Invocation of Shell via AWK - Linux
+          - f8341cb2-ee25-43fa-a975-d8a5a9714b39     # BPFtrace Unsafe Option Usage
+          - 3a716279-c18c-4488-83be-f9ececbfb9fc     # Linux Setgid Capability Set on a Binary via Setcap Utility
+          - ed447910-bc30-4575-a598-3a2e49516a7a     # Linux Setuid Capability Set on a Binary via Setcap Utility
+          - db1ac3be-f606-4e3a-89e0-9607cbe6b98a     # Capsh Shell Invocation - Linux
+          - ea34fb97-e2c4-4afb-810f-785e4459b194     # Curl Usage on Linux
+          - a2d9e2f3-0f43-4c7a-bcd9-9acfc0d723aa     # Suspicious Download and Execute Pattern via Curl/Wget
+          - 067d8238-7127-451c-a9ec-fa78045b618b     # Linux Doas Tool Execution
+          - bed978f8-7f3a-432b-82c5-9286a9b3031a     # Shell Invocation via Env Command - Linux
+          - 33e814e0-1f00-4e43-9c34-31fb7ae2b174     # ESXi Network Configuration Discovery Via ESXCLI
+          - 9691f58d-92c1-4416-8bf3-2edd753ec9cf     # ESXi Admin Permission Assigned To Account Via ESXCLI
+          - f41dada5-3f56-4232-8503-3fb7f9cf2d60     # ESXi Storage Information Discovery Via ESXCLI
+          - 38eb1dbb-011f-40b1-a126-cf03a0210563     # ESXi Syslog Configuration Change Via ESXCLI
+          - e80273e1-9faf-40bc-bd85-dbaff104c4e9     # ESXi System Information Discovery Via ESXCLI
+          - b28e4eb3-8bbc-4f0c-819f-edfe8e2f25db     # ESXi Account Creation Via ESXCLI
+          - 5f1573a7-363b-4114-9208-ad7a61de46eb     # ESXi VM List Discovery Via ESXCLI
+          - 2992ac4d-31e9-4325-99f2-b18a73221bb2     # ESXi VM Kill Via ESXCLI
+          - d54c2f06-aca9-4e2b-81c9-5317858f4b79     # ESXi VSAN Information Discovery Via ESXCLI
+          - 47b3bbd4-1bf7-48cc-84ab-995362aaa75a     # Shell Execution via Git - Linux
+          - d27ab432-2199-483f-a297-03633c05bae6     # OS Architecture Discovery Via Grep
+          - e34cfa0c-0a50-4210-9cb3-5632d08eb041     # Potential GobRAT File Discovery Via Grep
+          - 7f734ed0-4f47-46c0-837f-6ee62505abd9     # Potential Netcat Reverse Shell Execution
+          - e4ffe466-6ff8-48d4-94bd-e32d1a6061e2     # Nohup Execution
+          - 55e862a8-dd9c-4651-807a-f21fcad56716     # Python One-Liners with Base64 Decoding - Linux
+          - c4042d54-110d-45dd-a0e1-05c47822c937     # Python Spawning Pretty TTY Via PTY Module
+          - 2d2f44ff-4611-4778-a8fc-323a0e9850cc     # Inline Python Execution - Spawn Shell Via OS System Library
+          - e2326866-609f-4015-aea9-7ec634e8aa04     # Shell Execution via Rsync - Linux
+          - 297241f3-8108-4b3a-8c15-2dda9f844594     # Suspicious Invocation of Shell via Rsync
+          - 6b14bac8-3e3a-4324-8109-42f0546a347f     # Scheduled Cron Task/Job - Linux
+          - c21c4eaa-ba2e-419a-92b2-8371703cbe21     # Setuid and Setgid
+          - 8737b7f6-8df3-4bb7-b1da-06019b99b687     # Shell Invocation Via Ssh - Linux
+          - 746c86fb-ccda-4816-8997-01386263acc4     # Container Residence Discovery Via Proc Virtual FS
+          - 00b90cc1-17ec-402c-96ad-3a8117d7a582     # Suspicious Curl File Upload - Linux
+          - 11701de9-d5a5-44aa-8238-84252f131895     # Docker Container Discovery Via Dockerenv Listing
+          - 43e26eb5-cd58-48d1-8ce9-a273f5d298d8     # Potential Container Discovery Via Inodes Listing
+          - ea3ecad2-db86-4a89-ad0b-132a10d2db55     # Interactive Bash Suspicious Children
+          - d292e0af-9a18-420c-9525-ec0ac3936892     # Suspicious Java Children Processes
+          - f0025a69-e1b7-4dda-a53c-db21fa2d4071     # Script Interpreter Spawning Credential Scanner - Linux
+          - 42df45e7-e6e9-43b5-8f26-bec5b39cc239     # System Information Discovery
+          - cf610c15-ed71-46e1-bdf8-2bd1a99de6c4     # Download File To Potentially Suspicious Directory Via Wget
+          - 4e25af4b-246d-44ea-8563-e42aacab006b     # Potential Xterm Reverse Shell
         ioc:
-          - ioc-eicar-test                         # EICAR safe end-to-end IOC test set (ioc)                         # EICAR safe end-to-end IOC test set (ioc)                         # EICAR safe end-to-end IOC test set (ioc)
+          - ioc-eicar-test     # EICAR test file (MD5)
+    excludes:
+        sigma:
+          - 0326c3c8-7803-4a0f-8c5c-368f747f7c3e     # Triple Cross eBPF Rootkit Execve Hijack
+          - 071d5e5a-9cef-47ec-bc4e-a42e34d8d0ed     # Possible Coin Miner CPU Priority Param
+          - 08f26069-6f80-474b-8d1f-d971c6fedea0     # User Has Been Deleted Via Userdel
+          - 093d68c7-762a-42f4-9f46-95e79142571a     # Shell Execution via Nice - Linux
+          - 0ac15ec3-d24f-4246-aa2a-3077bb1cf90e     # Privileged User Has Been Created
+          - 0cf7a157-8879-41a2-8f55-388dd23746b7     # Linux Recon Indicators
+          - 0f79c4d2-4e1f-4683-9c36-b5469a665e06     # Access of Sudoers File Content
+          - 0fadd880-6af3-4610-b1e5-008dc3a11b8a     # Potential Suspicious BPF Activity - Linux
+          - 106d7cbd-80ff-4985-b682-a7043e5acb72     # Loading of Kernel Module via Insmod
+          - 11063ec2-de63-4153-935e-b1a8b9e616f1     # Linux Remote System Discovery
+          - 1182f3b3-e716-4efa-99ab-d2685d04360f     # History File Deletion
+          - 13f08f54-e705-4498-91fd-cce9d9cee9f1     # Potentially Suspicious Shell Script Creation in Profile Folder
+          - 18b042f0-2ecd-4b6e-9f8d-aa7a7e7de781     # Buffer Overflow Attempts
+          - 19bf6fdb-7721-4f3d-867f-53467f6a5db6     # Communication To Ngrok Tunneling Service - Linux
+          - 1edd77db-0669-4fef-9598-165bda82826d     # Guacamole Two Users Sharing Session Anomaly
+          - 1f6b8cd4-3e60-47cc-b282-5aa1cbc9182d     # Remote Access Tool - Team Viewer Session Started On Linux Host
+          - 214e7e6c-f21b-47ff-bb6f-551b2d143fcf     # Clipboard Collection with Xclip Tool - Auditd
+          - 21541900-27a9-4454-9c4c-3f0a4240344a     # OMIGOD SCX RunAsProvider ExecuteShellCommand
+          - 22236d75-d5a0-4287-bf06-c93b1770860f     # Triple Cross eBPF Rootkit Install Commands
+          - 259df6bc-003f-4306-9f54-4ff1a08fa38e     # Potential Perl Reverse Shell Execution
+          - 2953194b-e33c-4859-b9e8-05948c167447     # DD File Overwrite
+          - 2dad0cba-c62a-4a4f-949f-5f6ecd619769     # Split A File Into Pieces - Linux
+          - 2fade0b6-7423-4835-9d4f-335b39b83867     # Shell Execution Of Process Located In Tmp Directory
+          - 30aed7b6-d2c1-4eaf-9382-b6bc43e50c57     # File Deletion
+          - 30bcce26-51c5-49f2-99c8-7b59e3af36c7     # Execution Of Script Located In Potentially Suspicious Directory
+          - 312b42b1-bded-4441-8b58-163a3af58775     # Potentially Suspicious Execution From Tmp Folder
+          - 31545105-3444-4584-bebf-c466353230d2     # Touch Suspicious Service File
+          - 323ff3f5-0013-4847-bbd4-250b5edb62cc     # Modify System Firewall
+          - 32e62bc7-3de0-4bb1-90af-532978fe42c0     # Python Reverse Shell Execution Via PTY And Socket Modules
+          - 34979410-e4b5-4e5d-8cfb-389fdff05c12     # Remove Immutable File Attribute
+          - 36388120-b3f1-4ce9-b50b-280d9a7f4c04     # Kaspersky Endpoint Security Stopped Via CommandLine - Linux
+          - 36aa86ca-fd9d-4456-814e-d3b1b8e1e0bb     # Relevant ClamAV Message
+          - 37222991-11e9-4b6d-8bdf-60fbe48f753e     # Overwriting the File with Dev Zero or Null
+          - 3761e026-f259-44e6-8826-719ed8079408     # Linux Network Service Scanning - Auditd
+          - 377f33a1-4b36-4ee1-acee-1dbe4b43cfbe     # Suspicious VSFTPD Error Messages
+          - 3be619f4-d9ec-4ea8-a173-18fdd01996ab     # Flush Iptables Ufw Chain
+          - 3e102cd9-a70d-4a7a-9508-403963092f31     # Linux Network Service Scanning Tools Execution
+          - 3f0f5957-04f8-4792-ad89-192b0303bde6     # Python WebServer Execution - Linux
+          - 3fcc9b35-39e4-44c0-a2ad-9e82b6902b31     # Syslog Clearing or Removal Via System Utilities
+          - 403ed92c-b7ec-4edd-9947-5b535ee12d46     # Crontab Enumeration
+          - 457df417-8b9d-4912-85f3-9dbda39c3645     # Suspicious Nohup Execution
+          - 45810b50-7edc-42ca-813b-bdac02fb946b     # Steganography Hide Zip Information in Picture File
+          - 49f5dfc1-f92e-4d34-96fa-feba3f6acf36     # Disabling Security Tools - Builtin
+          - 4b09c71e-4269-4111-9cdd-107d8867f0cc     # Shell Execution via Flock - Linux
+          - 4b3cb710-5e83-4715-8c45-8b2b5b3e5751     # Modification of ld.so.preload
+          - 4c519226-f0cd-4471-bd2f-6fbb2bb68a79     # System Network Connections Discovery - Linux
+          - 4cad6c64-d6df-42d6-8dae-eb78defdc415     # Potential Linux Process Code Injection Via DD Utility
+          - 4cb57c2f-1f29-41f8-893d-8bed8e1c1d2f     # System Shutdown/Reboot - Linux
+          - 53059bc0-1472-438b-956a-7508a94a91f0     # Disable System Firewall
+          - 6104e693-a7d6-4891-86cb-49a258523559     # Bash Interactive Shell
+          - 6419afd1-3742-47a5-a7e6-b50386cd15f8     # Chmod Targeting Sensitive Directories
+          - 676381a6-15ca-4d73-a9c8-6a22e970b90d     # Local Groups Discovery - Linux
+          - 6a50f16c-3b7b-42d1-b081-0fdd3ba70a73     # User Added To Root/Sudoers Group Using Usermod
+          - 6adfbf8f-52be-4444-9bac-81b539624146     # Shell Execution via Find - Linux
+          - 6cc5fceb-9a71-4c23-aeeb-963abe0b279c     # Suspicious Use of /dev/tcp
+          - 6eea1bf6-f8d2-488a-a742-e6ef6c1b67db     # OMIGOD SCX RunAsProvider ExecuteScript
+          - 700fb7e8-2981-401c-8430-be58e189e741     # Suspicious Package Installed - Linux
+          - 70b4156e-50fc-4523-aa50-c9dddf1993fc     # Bpfdoor TCP Ports Redirect
+          - 72f4ab3f-787d-495d-a55d-68c2ff46cf4c     # Connection Proxy
+          - 74c01ace-0152-4094-8ae2-6fd776dd43e5     # File or Folder Permissions Change
+          - 759d0d51-bc99-4b5e-9add-8f5b2c8e7512     # Creation Of An User Account
+          - 7692f583-bd30-4008-8615-75dab3f08a99     # Enable BPF Kprobes Tracing
+          - 78a80655-a51e-4669-bc6b-e9d206a462ee     # Install Root Certificate
+          - 7ab8f73a-fcff-428b-84aa-6a5ff7877dea     # Vim GTFOBin Abuse - Linux
+          - 7e3c4651-c347-40c4-b1d4-d48590fdf684     # Code Injection by ld.so Preload
+          - 80915f59-9b56-4616-9de0-fd0dea6c12fe     # Linux Logs Clearing Attempts
+          - 818f7b24-0fba-4c49-a073-8b755573b9c7     # Linux Webshell Indicators
+          - 8344c0e5-5783-47cc-9cf9-a0f7fd03e6cf     # Potential Discovery Activity Using Find - Linux
+          - 84c9e83c-599a-458a-a0cb-0ecce44e807a     # Ufw Force Stop Using Ufw-Init
+          - 86157017-c2b1-4d4a-8c33-93b8e67e4af4     # Potential Suspicious Change To Sensitive/Critical Files
+          - 880973f3-9708-491c-a77b-2a35a1921158     # Linux Shell Pipe to Shell
+          - 8a46f16c-8c4c-82d1-b121-0fdd3ba70a84     # Group Has Been Deleted Via Groupdel
+          - 9069ea3c-b213-4c52-be13-86506a227ab1     # Linux Crypto Mining Indicators
+          - 95d61234-7f56-465c-6f2d-b562c6fedbc4     # Linux Package Uninstall
+          - 977ef627-4539-4875-adf4-ed8f780c4922     # Auditing Configuration Changes on Linux Host
+          - 97de11cd-4b67-4abf-9a8b-1020e670aa9e     # Pnscan Binary Data Transmission Activity
+          - 999c3b12-0a8c-40b6-8e13-dd7d62b75c7a     # Potentially Suspicious Named Pipe Created Via Mkfifo
+          - 9a0d8ca0-2385-4020-b6c6-cb6153ca56f3     # System Owner or User Discovery - Linux
+          - 9b5de532-a757-4d70-946c-1f3e44f48b4d     # Shell Execution GCC  - Linux
+          - 9d4548fa-bba0-4e88-bd66-5d5bf516cda0     # Masquerading as Linux Crond Process
+          - 9d779ce8-5256-4b13-8b6f-b91c602b43f4     # Named Pipe Created Via Mkfifo
+          - 9e1bef8d-0fff-46f6-8465-9aa54e128c1e     # Use Of Hidden Paths Or Files
+          - a015e032-146d-4717-8944-7a1884122111     # Linux HackTool Execution
+          - a39d7fa7-3fbd-4dc2-97e1-d87f546b1bbc     # Program Executions in Suspicious Folders
+          - a3b5e3e9-1b49-4119-8b8e-0344a01f21ee     # Data Compressed
+          - a46c93b7-55ed-4d27-a41b-c259456c4746     # Linux Crypto Mining Pool Connections
+          - a5a827d9-1bbe-4952-9293-c59d897eb41b     # Steganography Extract Files with Steghide
+          - a5b977d6-8a81-4475-91b9-49dbfcd941f7     # Remove Immutable File Attribute - Auditd
+          - a7af2487-9c2f-42e4-9bb9-ff961f0561d5     # Audio Capture
+          - a94cdd87-6c54-4678-a6cc-2814ffe5a13d     # Unix Shell Configuration Modification
+          - b3cec4e7-6901-4b0d-a02d-8ab2d8eb818b     # File Time Attribute Change - Linux
+          - b45e3d6f-42c6-47d8-a478-df6bd6cf534c     # Local System Accounts Discovery - Linux
+          - b86d356d-6093-443d-971c-9b07db583c68     # Suspicious Curl Change User Agents - Linux
+          - b8bdac18-c06e-4016-ac30-221553e74f59     # Potential Ruby Reverse Shell
+          - ba592c6d-6888-43c3-b8c6-689b8fe47337     # Linux Base64 Encoded Pipe to Shell
+          - bb382fd5-b454-47ea-a264-1828e4c766d6     # Shell Invocation via Apt - Linux
+          - bed26dea-4525-47f4-b24a-76e30e44ffb0     # Audit Rules Deleted Via Auditctl
+          - c0239255-822c-4630-b7f1-35362bcb8f44     # Triple Cross eBPF Rootkit Default LockFile
+          - c0d3734d-330f-4a03-aae2-65dacc6a8222     # Webshell Remote Command Execution
+          - c172b7b5-f3a1-4af2-90b7-822c63df86cb     # Mask System Power Settings Via Systemctl
+          - c2e234de-03a3-41e1-b39a-1e56dc17ba67     # Remove Scheduled Cron Task/Job
+          - c4568f5d-131f-4e78-83d4-45b2da0ec4f1     # Communication To LocaltoNet Tunneling Service Initiated - Linux
+          - c52a914f-3d8b-4b2a-bb75-b3991e75f8ba     # Binary Padding - Linux
+          - c6714a24-d7d5-4283-a36b-3ffd091d5f7e     # Potential PHP Reverse Shell
+          - c67e0c98-4d39-46ee-8f6b-437ebf6b950e     # Shellshock Expression
+          - c67fc22a-0be5-4b4f-aad5-2b32c4b69523     # Symlink Etc Passwd
+          - c830f15d-6f6e-430f-8074-6f73d6807841     # Logging Configuration Changes on Linux Host
+          - c8e35e96-19ce-4f16-aeb6-fd5588dc5365     # Suspicious Named Error
+          - c9d8b7fd-78e4-44fe-88f6-599135d46d60     # Security Software Discovery - Linux
+          - ca94a6db-8106-4737-9ed2-3e3bb826af0a     # Password Policy Discovery - Linux
+          - cb39d16b-b3b6-4a7a-8222-1cf24b686ffc     # Data Exfiltration with Wget
+          - ce446a9e-30b9-4483-8e38-d2c9ad0a2280     # Steganography Hide Files with Steghide
+          - cfec9d29-64ec-4a0f-9ffe-0fdb856d5446     # Suspicious Git Clone - Linux
+          - d08722cd-3d09-449a-80b4-83ea2d9d4616     # Hidden Files and Directories
+          - d3feb4ee-ff1d-4d3d-bd10-5b28a238cc72     # File and Directory Discovery - Linux
+          - d7821ff1-4527-4e33-9f84-d0d57fa2fb66     # Print History File Contents
+          - d7a650c4-226c-451e-948f-cc490db506aa     # PUA - TruffleHog Execution - Linux
+          - d8d97d51-122d-4cdd-9e2f-01b4b4933530     # Capabilities Discovery - Linux
+          - dbe4b9c5-c254-4258-9688-d6af0b7967fd     # Screen Capture with Import Tool
+          - dbfc7c98-04ab-4ab7-aa94-c74d22aa7376     # Potentially Suspicious Malware Callback Communication - Linux
+          - de25eeb8-3655-4643-ac3a-b662d3f26b6b     # Disable Or Stop Services
+          - df3fcaea-2715-4214-99c5-0056ea59eb35     # Credentials In Files - Linux
+          - e09eb557-96d2-4de9-ba2d-30f712a5afd3     # Commands to Clear or Remove the Syslog - Builtin
+          - e2072cab-8c9a-459b-b63c-40ae79e27031     # Decode Base64 Encoded Text
+          - e2f17c5d-b02a-442b-9052-6eb89c9fec9c     # Screen Capture with Xwd
+          - e3a8a052-111f-4606-9aee-f28ebeb76776     # Disabling Security Tools
+          - e497a24e-9345-4a62-9803-b06d7d7cb132     # ASLR Disabled Via Sysctl or Direct Syscall - Linux
+          - e76b413a-83d0-4b94-8e4c-85db4a5b8bdc     # Suspicious OpenSSH Daemon Error
+          - e7bd1cfa-b446-4c88-8afb-403bcd79e3fa     # System Network Discovery - Linux
+          - eae8ce9f-bde9-47a6-8e79-f20d18419910     # Suspicious History File Operations - Linux
+          - ec127035-a636-4b9a-8555-0efd4e59f316     # Clipboard Collection with Xclip Tool
+          - ec52985a-d024-41e3-8ff6-14169039a0b3     # Mount Execution With Hidepid Parameter
+          - eca5e022-d368-4043-98e5-9736fb01f72f     # Clear or Disable Kernel Ring Buffer Logs via Syslog Syscall
+          - edd595d7-7895-4fa7-acb3-85a18a8772ca     # Steganography Unzip Hidden Information From Picture File
+          - f200dc3f-b219-425d-a17e-c38467364816     # Clipboard Collection of Image Data with Xclip Tool
+          - f2bed782-994e-4f40-9cd5-518198cb3fba     # Linux Sudo Chroot Execution
+          - f4d3748a-65d1-4806-bd23-e25728081d01     # Network Sniffing - Linux
+          - f64b6e9a-5d9d-48a5-8289-e1dd2b3876e1     # Suspicious Log Entries
+          - f7158a64-6204-4d6d-868a-6e6378b467e0     # Suspicious C2 Activities
+          - f9b3edc5-3322-4fc7-8aa3-245d646cc4b7     # Potential Linux Amazon SSM Agent Hijacking
+          - fa4aaed5-4fe0-498d-bbc0-08e3346387ba     # Copy Passwd Or Shadow From TMP Path
+          - fdc88d25-96fb-4b7c-9633-c0e417fdbd4e     # Linux Command History Tampering
+          - fe2f9663-41cb-47e2-b954-8a228f3b9dff     # Linux Base64 Encoded Shebang In CLI

@@ -106,6 +106,18 @@ python tools/search_sigma.py --description "WMI" --os windows
 python tools/search_sigma.py --description "persistence" --show-path
 ```
 
+### `search_packs.py` — ATT&CK coverage and exports
+
+Inspect what tactics and techniques a pack covers, or export matching rules to CSV.
+
+```sh
+python tools/search_packs.py tactics                              # tactic counts for all packs
+python tools/search_packs.py tactics windows/essential            # one pack
+python tools/search_packs.py coverage windows/essential --summary # tactics + techniques summary
+python tools/search_packs.py csv windows/hunting T1059            # rules for T1059 (+ sub-techniques)
+python tools/search_packs.py csv windows/hunting --tactic execution persistence --output results.csv
+```
+
 ### `link_packs.py` — migrate and symlink rules
 
 Converts packs from the legacy list format to the current `rules.has` dict format, and creates relative symlinks from each pack directory into the shared `rules/` pool.
@@ -120,17 +132,30 @@ python tools/link_packs.py
 # 1. Pull latest Sigma rules from upstream
 python tools/download_sigma.py
 
-# 2. Add/edit sigma, yara, or ioc files under packs/<os>/<level>/
+# 2. Populate the pack — copies matching rules in and removes anything that no longer matches
+#    Adjust --level and --tactic to define the pack's scope.
+#    --sync enforces an exact match: rules in the pack that fail the filters are deleted.
+python tools/populate_pack.py \
+  --os windows \
+  --level high critical \
+  --tactic execution stealth persistence discovery privilege-escalation credential-access \
+  --pack essential \
+  --sync
 
-# 3. Rebuild the pack.yml manifest
+# 3. Rebuild pack.yml from whatever is now on disk
 python tools/build_packs.py --pack windows/essential
 
-# 4. Create the zip archive
+# 4. (Optional) Verify ATT&CK coverage
+python tools/search_packs.py tactics windows/essential
+
+# 5. Create the zip archive
 python tools/zip_pack.py --pack windows/essential
 
-# 5. Upload to Radegast
+# 6. Upload to Radegast
 RADEGAST_API_KEY=<key> python tools/upload_radegast.py
 ```
+
+Steps 2 and 3 are the core loop: `populate_pack.py --sync` defines *what goes in the pack* based on your criteria; `build_packs.py` reflects *what is on disk* into `pack.yml`. Running them in order keeps the two in sync.
 
 ## License
 

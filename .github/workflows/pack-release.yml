@@ -5,7 +5,10 @@ on:
     branches: [master]
     paths:
       - 'packs/**'
+<<<<<<< HEAD
       - '!packs/**/README.md'
+=======
+>>>>>>> 8ed39bb277d772ccadb14d4ad92771110aa8c765
 
 permissions:
   contents: read
@@ -29,7 +32,10 @@ jobs:
         id: changed
         run: |
           PACKS=$(git diff --name-only "${{ github.event.before }}" "${{ github.sha }}" -- packs/ \
+<<<<<<< HEAD
             | grep -v 'README\.md' \
+=======
+>>>>>>> 8ed39bb277d772ccadb14d4ad92771110aa8c765
             | grep -oP 'packs/\K[^/]+/[^/]+' \
             | sort -u)
 
@@ -37,7 +43,11 @@ jobs:
           echo "$PACKS" >> "$GITHUB_OUTPUT"
           echo "EOF" >> "$GITHUB_OUTPUT"
 
+<<<<<<< HEAD
       - name: Build and upload changed packs
+=======
+      - name: Upload changed packs to Radegast
+>>>>>>> 8ed39bb277d772ccadb14d4ad92771110aa8c765
         run: |
           echo "## Pack Release Results" >> "$GITHUB_STEP_SUMMARY"
           echo "" >> "$GITHUB_STEP_SUMMARY"
@@ -45,6 +55,7 @@ jobs:
           FAILED=0
           while IFS= read -r pack; do
             [ -z "$pack" ] && continue
+<<<<<<< HEAD
 
             echo "Building pack.yml for $pack..."
             if ! uv run python tools/build_packs.py --pack "$pack"; then
@@ -53,6 +64,8 @@ jobs:
               continue
             fi
 
+=======
+>>>>>>> 8ed39bb277d772ccadb14d4ad92771110aa8c765
             echo "Uploading $pack..."
             if uv run python tools/upload_radegast.py --pack "$pack"; then
               echo "- ✅ \`$pack\`" >> "$GITHUB_STEP_SUMMARY"

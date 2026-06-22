@@ -4,16 +4,19 @@ Usage:
     python tools/search_sigma.py --description "persistence"
     python tools/search_sigma.py --description "WMI" --os windows
     python tools/search_sigma.py --description "lateral movement" --case-sensitive
+    python tools/search_sigma.py --technique T1059
+    python tools/search_sigma.py --technique T1059.001 T1078 --os windows
     python tools/search_sigma.py --stats
     python tools/search_sigma.py --stats --os windows
 
 Options:
-    --description TEXT      Substring to match against the 'description' field
-    --os OS [OS ...]        Restrict search to one or more OS subtrees
-                            (choices: windows linux macos; default: all)
-    --case-sensitive        Disable case-folding (default: case-insensitive)
-    --show-path             Print the file path of each match
-    --stats                 Print rule counts grouped by severity and tactic
+    --description TEXT          Substring to match against the 'description' field
+    --technique TECHNIQUE [...] Filter by MITRE ATT&CK technique ID(s), e.g. T1059, T1059.001
+                                Case-insensitive. A parent ID (T1059) also matches sub-techniques.
+    --os OS [OS ...]            Restrict search to one or more OS subtrees
+                                (choices: windows linux macos; default: all)
+    --case-sensitive            Disable case-folding (default: case-insensitive)
+    --stats                     Print rule counts grouped by severity and tactic
 """
 
 from __future__ import annotations
@@ -68,6 +71,17 @@ def matches(doc: dict, args: argparse.Namespace) -> bool:
     if args.description is not None:
         if not _text_match(doc.get("description"), args.description, args.case_sensitive):
             return False
+
+    if args.technique:
+        tags = [t.lower() for t in (doc.get("tags") or [])]
+        matched = any(
+            tag == f"attack.{tech.lower()}" or tag.startswith(f"attack.{tech.lower()}.")
+            for tech in args.technique
+            for tag in tags
+        )
+        if not matched:
+            return False
+
     return True
 
 
@@ -130,7 +144,7 @@ def print_stats(stats: dict) -> None:
 # --------------------------------------------------------------------------- #
 
 
-def print_match(path: Path, doc: dict, show_path: bool) -> None:
+def print_match(path: Path, doc: dict) -> None:
     title = doc.get("title", "<no title>")
     rule_id = doc.get("id", "")
     description = doc.get("description", "")
@@ -143,8 +157,7 @@ def print_match(path: Path, doc: dict, show_path: bool) -> None:
         parts.append(f"  Description: {description}")
     if level:
         parts.append(f"  Level      : {level}")
-    if show_path:
-        parts.append(f"  Path       : {path.relative_to(REPO_ROOT)}")
+    parts.append(f"  Path       : {path.relative_to(REPO_ROOT)}")
 
     print("\n".join(parts))
     print()
@@ -173,14 +186,18 @@ def parse_args() -> argparse.Namespace:
         help=f"Restrict search to one or more OS subtrees (default: all). Choices: {', '.join(ALL_OS)}",
     )
     parser.add_argument(
+        "--technique",
+        nargs="+",
+        metavar="TECHNIQUE",
+        help=(
+            "Filter by MITRE ATT&CK technique ID(s), e.g. T1059 or T1059.001. "
+            "Case-insensitive. A parent ID (T1059) also matches all its sub-techniques."
+        ),
+    )
+    parser.add_argument(
         "--case-sensitive",
         action="store_true",
         help="Disable case-folding (default: case-insensitive)",
-    )
-    parser.add_argument(
-        "--show-path",
-        action="store_true",
-        help="Include the file path in output",
     )
     parser.add_argument(
         "--stats",
@@ -199,8 +216,8 @@ def main() -> None:
         print_stats(stats)
         return
 
-    if args.description is None:
-        print("No search criteria provided. Use --description TEXT or --stats.")
+    if args.description is None and not args.technique:
+        print("No search criteria provided. Use --description TEXT, --technique ID, or --stats.")
         print("Run with --help for usage.")
         sys.exit(1)
 
@@ -209,9 +226,9 @@ def main() -> None:
     for path, doc in iter_rules(target_os):
         if matches(doc, args):
             count += 1
-            print_match(path, doc, args.show_path)
+            print_match(path, doc)
 
-    print(f"─── {count} rule(s) matched ───")
+    print(f"--- {count} rule(s) matched ---")
 
 
 if __name__ == "__main__":

@@ -5,7 +5,10 @@ on:
     branches: [packs-dev]
     paths:
       - 'packs/**'
+<<<<<<< HEAD
       - '!packs/**/README.md'
+=======
+>>>>>>> 8ed39bb277d772ccadb14d4ad92771110aa8c765
 
 permissions:
   contents: read
@@ -32,7 +35,10 @@ jobs:
           fi
 
           PACKS=$(git diff --name-only "$BEFORE" "$SHA" -- packs/ \
+<<<<<<< HEAD
             | grep -v 'README\.md' \
+=======
+>>>>>>> 8ed39bb277d772ccadb14d4ad92771110aa8c765
             | grep -oP 'packs/\K[^/]+/[^/]+' \
             | sort -u \
             | tr '\n' ' ' \

@@ -1,3 +1,57 @@
+"""Install or uninstall the Radegast EDR agent and Rustinel sensor on Windows.
+
+This script automates the full lifecycle of a Radegast deployment on a Windows
+test machine — from device registration through service installation — and
+provides a matching uninstall path for teardown after atomic testing.
+
+Prerequisites
+-------------
+- Windows x64 or arm64 (must run as Administrator; the script self-elevates via UAC)
+- ``RADEGAST_KEY`` environment variable set to a valid Radegast API key
+- ``uv`` on PATH (used to install and run the Python-based EDR agent)
+- Internet access to ``console-api.radegast.app`` and GitHub (WinSW download)
+
+Install flow (default)
+----------------------
+0. Register the device with the Radegast console API and obtain a token.
+1. Stop and uninstall any existing Radegast/Rustinel services to unlock files.
+2. Create the full directory tree under ``C:\\Program Files\\Radegast\\``.
+3. Detect CPU architecture (amd64 / arm64) and download the Rustinel sensor zip.
+4. Write ``config.toml`` into the Rustinel directory (base64-encoded defaults).
+5. Initialise a ``uv`` Python project for the management agent.
+6. Download WinSW and copy it as both service executables.
+7. Write WinSW service XML files for ``RadegastRustinel`` and ``RadegastAgent``.
+8. Register both Windows services via WinSW ``install``.
+9. Unblock files (remove Mark-of-the-Web attributes via PowerShell).
+10. Apply strict NTFS ACLs so only ``NT SERVICE\\RadegastAgent`` and
+    ``SYSTEM``/``Administrators`` can access the installation tree.
+11. Generate an ``uninstall.bat`` inside the installation directory.
+12. Start both services.
+
+Uninstall flow (``--uninstall``)
+---------------------------------
+Reads ``device_id`` from ``C:\\Program Files\\Radegast\\device.json``,
+calls ``DELETE /api/v1/devices/<id>`` on the Radegast console, then runs
+the previously generated ``uninstall.bat`` to stop services and remove files.
+
+Environment variables
+---------------------
+RADEGAST_KEY
+    API key for authenticating against the Radegast console API.
+    Required for both install and uninstall paths.
+
+Usage
+-----
+    # Install (registers a device named after the local hostname, group 10)
+    python radegast_install_cleanup.py
+
+    # Install with a custom device name and group
+    python radegast_install_cleanup.py --name my-test-vm --group-id 5
+
+    # Uninstall (unregisters the device and removes all files)
+    python radegast_install_cleanup.py --uninstall
+"""
+
 import os
 import sys
 import ssl

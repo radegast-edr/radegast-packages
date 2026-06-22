@@ -1,5 +1,9 @@
 /scripts
 .env
+<<<<<<< HEAD
+=======
+.venv
+>>>>>>> 8ed39bb277d772ccadb14d4ad92771110aa8c765
 __pycache__/
 *.pyc
 *.pyo
