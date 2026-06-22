@@ -1,0 +1,72 @@
+name: Pack PR
+
+on:
+  push:
+    branches: [packs-dev]
+    paths:
+      - 'packs/**'
+      - '!packs/**/README.md'
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  create-pr:
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Find changed packs
+        id: changed
+        run: |
+          BEFORE="${{ github.event.before }}"
+          SHA="${{ github.sha }}"
+
+          if [ "$BEFORE" = "0000000000000000000000000000000000000000" ]; then
+            BEFORE="origin/master"
+          fi
+
+          PACKS=$(git diff --name-only "$BEFORE" "$SHA" -- packs/ \
+            | grep -v 'README\.md' \
+            | grep -oP 'packs/\K[^/]+/[^/]+' \
+            | sort -u \
+            | tr '\n' ' ' \
+            | sed 's/ $//')
+
+          echo "packs=$PACKS" >> "$GITHUB_OUTPUT"
+          echo "has_changes=$([ -n "$PACKS" ] && echo true || echo false)" >> "$GITHUB_OUTPUT"
+
+      - name: Create or update PR
+        if: steps.changed.outputs.has_changes == 'true'
+        run: |
+          PACKS="${{ steps.changed.outputs.packs }}"
+
+          {
+            echo "## Changed Detection Packs"
+            echo ""
+            for pack in $PACKS; do
+              echo "- \`$pack\`"
+            done
+            echo ""
+            echo "---"
+            echo "*Merging this PR will automatically upload the changed packs to Radegast EDR.*"
+          } > /tmp/pr-body.md
+
+          EXISTING=$(gh pr list --head packs-dev --base master --json number -q '.[0].number')
+
+          if [ -z "$EXISTING" ]; then
+            gh pr create \
+              --title "feat: update detection packs ($PACKS)" \
+              --body-file /tmp/pr-body.md \
+              --base master \
+              --head packs-dev
+          else
+            gh pr edit "$EXISTING" \
+              --title "feat: update detection packs ($PACKS)" \
+              --body-file /tmp/pr-body.md
+          fi

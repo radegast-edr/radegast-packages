@@ -1,9 +1,7 @@
 /scripts
-
+.env
 __pycache__/
 *.pyc
 *.pyo
-
 *.zip
-
 *.csv
