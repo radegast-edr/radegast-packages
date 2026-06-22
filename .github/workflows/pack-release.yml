@@ -1,0 +1,55 @@
+name: Pack Release
+
+on:
+  push:
+    branches: [master]
+    paths:
+      - 'packs/**'
+
+permissions:
+  contents: read
+
+jobs:
+  upload-packs:
+    runs-on: ubuntu-latest
+    env:
+      RADEGAST_API_KEY: ${{ secrets.RADEGAST_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - uses: astral-sh/setup-uv@v5
+
+      - name: Install dependencies
+        run: uv sync
+
+      - name: Find changed packs
+        id: changed
+        run: |
+          PACKS=$(git diff --name-only "${{ github.event.before }}" "${{ github.sha }}" -- packs/ \
+            | grep -oP 'packs/\K[^/]+/[^/]+' \
+            | sort -u)
+
+          echo "packs<<EOF" >> "$GITHUB_OUTPUT"
+          echo "$PACKS" >> "$GITHUB_OUTPUT"
+          echo "EOF" >> "$GITHUB_OUTPUT"
+
+      - name: Upload changed packs to Radegast
+        run: |
+          echo "## Pack Release Results" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+
+          FAILED=0
+          while IFS= read -r pack; do
+            [ -z "$pack" ] && continue
+            echo "Uploading $pack..."
+            if uv run python tools/upload_radegast.py --pack "$pack"; then
+              echo "- ✅ \`$pack\`" >> "$GITHUB_STEP_SUMMARY"
+            else
+              echo "- ❌ \`$pack\` (upload failed)" >> "$GITHUB_STEP_SUMMARY"
+              FAILED=1
+            fi
+          done <<< "${{ steps.changed.outputs.packs }}"
+
+          exit $FAILED
