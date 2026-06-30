@@ -1,6 +1,6 @@
 # Windows Detection Packs
 
-Detection packs for standalone Windows workstations, organized by detection maturity and telemetry requirements. Domain-joined tactics/techniques (lateral movement, Kerberos, AD enumeration) are excluded from all packs.
+Detection packs for standalone Windows workstations, organized by detection maturity. Domain-joined tactics/techniques (lateral movement, Kerberos, AD enumeration) are excluded from all packs.
 
 All packs include only **critical** and **high** severity rules.
 
@@ -23,8 +23,6 @@ This means `windows-advanced` covers all techniques from `windows-essential` plu
 ## windows-essential
 
 Basic coverage targeting commodity threats and known-bad patterns. High-confidence, low false-positive detections suitable for initial rollout or lower-maturity SOC environments. Each detection should be actionable on a single event with minimal tuning.
-
-**Telemetry required:** Windows Security Event Log, Sysmon (basic — EID 1, 3, 11), PowerShell logging.
 
 **Expected false positive level:** Low
 
@@ -53,11 +51,9 @@ python tools/populate_pack.py \
 
 ## windows-advanced
 
-Middle-ground coverage adding evasion techniques, process injection, and living-off-the-land binary (LOLBin) abuse. Detections at this tier work on patterns and context — parent-child relationships, path and hash correlation, sequences of events — rather than single indicators. Requires a tuned Sysmon deployment and noise suppression before detections are operationally useful.
+Middle-ground coverage adding evasion techniques, process injection, and living-off-the-land binary (LOLBin) abuse. Detections at this tier work on patterns and context — parent-child relationships, path and hash correlation, sequences of events — rather than single indicators.
 
 Extends `windows-essential`. All essential techniques are included via pack inheritance.
-
-**Telemetry required:** Full Sysmon coverage (EID 1, 3, 7, 10, 11, 12, 13), PowerShell ScriptBlock logging, Windows Security Event Log.
 
 **Expected false positive level:** Medium
 
@@ -94,11 +90,9 @@ python tools/populate_pack.py \
 
 ## windows-hunting
 
-Advanced threat hunting coverage for subtle, fileless, and living-off-the-land techniques. Detections at this tier produce candidates for analyst review rather than high-confidence standalone alerts. Requires full telemetry including ETW-level kernel events, PowerShell ScriptBlock logging, and behavioral correlation across multiple events over time.
+Advanced threat hunting coverage for subtle, fileless, and living-off-the-land techniques. Detections at this tier produce candidates for analyst review rather than high-confidence standalone alerts.
 
 Extends `windows-advanced`. All essential and advanced techniques are included via pack inheritance.
-
-**Telemetry required:** Full Sysmon, ETW kernel provider events, PowerShell ScriptBlock and Module logging, Windows Defender ATP or equivalent EDR telemetry.
 
 **Expected false positive level:** High
 
@@ -138,8 +132,8 @@ python tools/populate_pack.py \
 Deploy and validate each tier before progressing to the next:
 
 1. Deploy `windows-essential` → run Atomic tests for all eight technique IDs → resolve gaps → tune false positives.
-2. Verify Sysmon coverage is complete → deploy `windows-advanced` → run Atomic tests → tune.
-3. Confirm ETW and ScriptBlock logging are operational → deploy `windows-hunting` → validate against Atomic tests → iterate on analyst triage workflow.
+2. Deploy `windows-advanced` → run Atomic tests → tune.
+3. Deploy `windows-hunting` → validate against Atomic tests → iterate on analyst triage workflow.
 
 ---
 

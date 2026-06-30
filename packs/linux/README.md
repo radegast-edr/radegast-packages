@@ -1,6 +1,6 @@
 # Linux Detection Packs
 
-Detection packs for standalone Linux hosts (RHEL/CentOS/Rocky and Ubuntu/Debian), organized by detection maturity and telemetry requirements. Domain-joined tactics/techniques (SSSD/Winbind-based AD enumeration, Kerberos) are excluded from all packs.
+Detection packs for standalone Linux hosts (RHEL/CentOS/Rocky and Ubuntu/Debian), organized by detection maturity. Domain-joined tactics/techniques (SSSD/Winbind-based AD enumeration, Kerberos) are excluded from all packs.
 
 ---
 
@@ -21,8 +21,6 @@ This means `linux-advanced` covers all techniques from `linux-essential` plus it
 ## linux-essential
 
 Basic coverage targeting commodity threats and known-bad patterns. High-confidence, low false-positive detections suitable for initial rollout or lower-maturity SOC environments. Each detection should be actionable on a single event with minimal tuning.
-
-**Telemetry required:** eBPF — exec* syscall tracing, openat/read on sensitive paths, network socket tracing, file write events.
 
 **Expected false positive level:** Low
 
@@ -50,11 +48,9 @@ python tools/populate_pack.py \
 
 ## linux-advanced
 
-Middle-ground coverage adding evasion techniques, interpreter abuse, and permission manipulation. Detections at this tier work on patterns and sequences — process ancestry, file path context, command argument correlation — rather than single events. Requires eBPF process ancestry tracking and file path correlation to be operationally useful.
+Middle-ground coverage adding evasion techniques, interpreter abuse, and permission manipulation. Detections at this tier work on patterns and sequences — process ancestry, file path context, command argument correlation — rather than single events.
 
 Extends `linux-essential`. All essential techniques are included via pack inheritance.
-
-**Telemetry required:** eBPF — full process lineage, file write tracing on /etc and home directories, fchmod/chmod syscall tracing, network + file write correlation.
 
 **Expected false positive level:** Medium
 
@@ -90,11 +86,9 @@ python tools/populate_pack.py \
 
 ## linux-hunting
 
-Advanced threat hunting coverage for subtle, fileless, memory-resident, and kernel-level techniques. Detections at this tier produce candidates for analyst review rather than high-confidence standalone alerts. Requires full eBPF syscall tracing including memfd_create, mmap, ptrace, bpf(), and kernel module load events.
+Advanced threat hunting coverage for subtle, fileless, memory-resident, and kernel-level techniques. Detections at this tier produce candidates for analyst review rather than high-confidence standalone alerts.
 
 Extends `linux-advanced`. All essential and advanced techniques are included via pack inheritance.
-
-**Telemetry required:** eBPF — full syscall tracing (memfd_create, mmap, ptrace, process_vm_writev, init_module/finit_module, bpf()), network packet inspection, process name vs path vs hash correlation.
 
 **Expected false positive level:** High
 
@@ -133,8 +127,8 @@ python tools/populate_pack.py \
 Deploy and validate each tier before progressing to the next:
 
 1. Deploy `linux-essential` → run Atomic tests for all eight technique IDs on both RHEL and Ubuntu hosts → resolve gaps → tune false positives.
-2. Verify eBPF process ancestry and file path correlation are operational → deploy `linux-advanced` → run Atomic tests → tune.
-3. Confirm full syscall tracing (memfd_create, ptrace, bpf()) is operational → deploy `linux-hunting` → validate against Atomic tests → iterate on analyst triage workflow.
+2. Deploy `linux-advanced` → run Atomic tests → tune.
+3. Deploy `linux-hunting` → validate against Atomic tests → iterate on analyst triage workflow.
 
 ---
 
