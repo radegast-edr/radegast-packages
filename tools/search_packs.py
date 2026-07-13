@@ -30,6 +30,9 @@ Subcommands:
                 and techniques.  No filter required — every rule in the pack is included.
     tactics     Show how many detections each tactic has across every pack (or one pack).
                 Optionally export the breakdown as CSV.
+    id          Find sigma rule(s) by their yaml "id" field (the rule UUID). Matches
+                full or partial ids, case-insensitively. Searches all packs unless a
+                pack is given.
 """
 
 from __future__ import annotations
@@ -392,6 +395,74 @@ def cmd_list(args: argparse.Namespace) -> None:
 
 
 # --------------------------------------------------------------------------- #
+# id subcommand
+# --------------------------------------------------------------------------- #
+
+_ID_CSV_FIELDS = ["pack", "file", "rule_id", "title", "severity", "tactics", "techniques"]
+
+
+def cmd_id(args: argparse.Namespace) -> None:
+    search_term = args.id_value.strip().lower()
+    if not search_term:
+        print("Error: provide a rule id (or partial id) to search for", file=sys.stderr)
+        sys.exit(1)
+
+    if args.pack:
+        pack_dir = find_pack_dir(args.pack)
+        if pack_dir is None:
+            print(f"Error: pack '{args.pack}' not found under {REPO_ROOT / 'packs'}", file=sys.stderr)
+            sys.exit(1)
+        pack_path_str = str(pack_dir.relative_to(REPO_ROOT / "packs")).replace("\\", "/")
+        packs = [(pack_path_str, args.pack, pack_dir)]
+    else:
+        packs = list(iter_all_pack_dirs())
+
+    rows: list[dict] = []
+
+    for pack_path_str, _pack_id, pack_dir in packs:
+        sigma_dir = pack_dir / "sigma"
+        if not sigma_dir.is_dir():
+            continue
+        for path, doc in iter_rules(sigma_dir):
+            rule_id = str(doc.get("id", ""))
+            if not rule_id or search_term not in rule_id.lower():
+                continue
+            tactics, techniques = split_tags(doc.get("tags") or [])
+            rows.append({
+                "pack": pack_path_str,
+                "file": str(path.relative_to(REPO_ROOT)),
+                "rule_id": rule_id,
+                "title": doc.get("title", path.stem),
+                "severity": doc.get("level", ""),
+                "tactics": ", ".join(t[len("attack."):] for t in tactics),
+                "techniques": ", ".join(t[len("attack."):].upper() for t in techniques),
+            })
+
+    if not rows:
+        print(f"No rule found with id matching '{args.id_value}'", file=sys.stderr)
+        sys.exit(0)
+
+    if args.output:
+        output_path = Path(args.output)
+        with output_path.open("w", newline="", encoding="utf-8") as f:
+            writer = csv.DictWriter(f, fieldnames=_ID_CSV_FIELDS)
+            writer.writeheader()
+            writer.writerows(rows)
+        print(f"Wrote {len(rows)} rule{'s' if len(rows) != 1 else ''} to {output_path}")
+        return
+
+    for row in rows:
+        print(f"Pack:       {row['pack']}")
+        print(f"File:       {row['file']}")
+        print(f"Rule ID:    {row['rule_id']}")
+        print(f"Title:      {row['title']}")
+        print(f"Severity:   {row['severity']}")
+        print(f"Tactics:    {row['tactics'] or '-'}")
+        print(f"Techniques: {row['techniques'] or '-'}")
+        print("-" * 80)
+
+
+# --------------------------------------------------------------------------- #
 # tactics subcommand
 # --------------------------------------------------------------------------- #
 
@@ -490,6 +561,10 @@ examples:
   python tools/search_packs.py tactics
   python tools/search_packs.py tactics windows/essential
   python tools/search_packs.py tactics --output tactic_coverage.csv
+
+  python tools/search_packs.py id eb2d07d4-49cb-4523-801a-da002df36602
+  python tools/search_packs.py id eb2d07d4 windows/hunting
+  python tools/search_packs.py id eb2d07d4-49cb-4523-801a-da002df36602 --output match.csv
 """,
     )
     sub = parser.add_subparsers(dest="command", required=True)
@@ -573,6 +648,30 @@ examples:
         help="Also write results as CSV to FILE (columns: pack_path, pack_id, tactic, rule_count)",
     )
 
+    idp = sub.add_parser(
+        "id",
+        help="Find sigma rule(s) by their yaml 'id' field (rule UUID)",
+    )
+    idp.add_argument(
+        "id_value",
+        metavar="ID",
+        help="Full or partial rule id (UUID) to search for, case-insensitive",
+    )
+    idp.add_argument(
+        "pack",
+        nargs="?",
+        default=None,
+        help=(
+            "Pack path (e.g. windows/essential) or pack ID (e.g. windows-essential) "
+            "to restrict the search to. Omit to search all packs."
+        ),
+    )
+    idp.add_argument(
+        "--output", "-o",
+        metavar="FILE",
+        help="Write matches as CSV to FILE instead of printing them",
+    )
+
     return parser
 
 
@@ -586,6 +685,8 @@ def main() -> None:
         cmd_list(args)
     elif args.command == "tactics":
         cmd_tactics(args)
+    elif args.command == "id":
+        cmd_id(args)
 
 
 if __name__ == "__main__":
