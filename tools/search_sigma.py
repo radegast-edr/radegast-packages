@@ -6,6 +6,8 @@ Usage:
     python tools/search_sigma.py --description "lateral movement" --case-sensitive
     python tools/search_sigma.py --technique T1059
     python tools/search_sigma.py --technique T1059.001 T1078 --os windows
+    python tools/search_sigma.py --id eb2d07d4-49cb-4523-801a-da002df36602
+    python tools/search_sigma.py --id eb2d07d4 --os windows
     python tools/search_sigma.py --stats
     python tools/search_sigma.py --stats --os windows
 
@@ -13,6 +15,8 @@ Options:
     --description TEXT          Substring to match against the 'description' field
     --technique TECHNIQUE [...] Filter by MITRE ATT&CK technique ID(s), e.g. T1059, T1059.001
                                 Case-insensitive. A parent ID (T1059) also matches sub-techniques.
+    --id TEXT                    Full or partial rule id (UUID) to match, e.g. eb2d07d4-...
+                                Case-insensitive substring match.
     --os OS [OS ...]            Restrict search to one or more OS subtrees
                                 (choices: windows linux macos; default: all)
     --case-sensitive            Disable case-folding (default: case-insensitive)
@@ -80,6 +84,10 @@ def matches(doc: dict, args: argparse.Namespace) -> bool:
             for tag in tags
         )
         if not matched:
+            return False
+
+    if args.id is not None:
+        if not _text_match(doc.get("id"), args.id, args.case_sensitive):
             return False
 
     return True
@@ -195,6 +203,11 @@ def parse_args() -> argparse.Namespace:
         ),
     )
     parser.add_argument(
+        "--id",
+        metavar="TEXT",
+        help="Full or partial rule id (UUID) to match, case-insensitive substring match",
+    )
+    parser.add_argument(
         "--case-sensitive",
         action="store_true",
         help="Disable case-folding (default: case-insensitive)",
@@ -216,8 +229,8 @@ def main() -> None:
         print_stats(stats)
         return
 
-    if args.description is None and not args.technique:
-        print("No search criteria provided. Use --description TEXT, --technique ID, or --stats.")
+    if args.description is None and not args.technique and args.id is None:
+        print("No search criteria provided. Use --description TEXT, --technique ID, --id ID, or --stats.")
         print("Run with --help for usage.")
         sys.exit(1)
 
