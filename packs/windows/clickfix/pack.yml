@@ -1,12 +1,12 @@
 name: Windows Clickfix
 id: windows-clickfix
-description: "TODO: describe windows-clickfix pack."
+description: Package that contains sigma rules that are targeting ClickFix/FakeCaptcha attacs.
 os: windows
 level: clickfix
 pack_schema_version: 1
 requires_rustinel: ">=1.0.2"
 default: false
-expected_false_positive_level: medium
+expected_false_positive_level: low
 status: experimental
 license: DRL-1.1
 extends: []
