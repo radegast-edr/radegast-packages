@@ -1,0 +1,28 @@
+title: Browser Started with Remote Debugging Initiated By PowerShell
+id: 3dfa8836-67c8-4658-bf6f-01d26cec6b4f
+status: experimental
+description: Detects browsers starting with the remote debugging flags initiated by PowerShell. This is a technique often used to perform browser injection and infostealer attacks
+references:
+   - https://www.joesandbox.com/analysis/search?threatname=clickfix
+   - https://github.com/defaultnamehere/cookie_crimes/
+   - https://github.com/wunderwuzzi23/firefox-cookiemonster
+author: Luke Rusten
+date: 2025/04/10
+tags:
+   - attack.credential_access
+   - attack.t1185
+logsource:
+   category: process_creation
+   product: windows
+detection:
+   parent:
+       ParentImage|endswith: '\powershell.exe'
+   selection_chromium_based:
+       CommandLine|contains: ' --remote-debugging-'
+   selection_firefox:
+       Image|endswith: '\firefox.exe'
+       CommandLine|contains: ' -start-debugger-server'
+   condition: parent and 1 of selection_*
+falsepositives:
+   - Unknown
+level: low

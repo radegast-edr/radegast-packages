@@ -15,6 +15,7 @@ Usage:
 from __future__ import annotations
 
 import argparse
+import json
 import re
 import sys
 import textwrap
@@ -279,6 +280,24 @@ def _wrap(text: str, width: int = 80, indent: int = 4) -> list[str]:
     return [f"{prefix}{ln}" for ln in textwrap.fill(text.strip(), width - indent).split("\n")]
 
 
+def _scalar_line(key: str, value: str) -> str:
+    """Render "key: value" as a single YAML line, quoting only if needed.
+
+    A plain (unquoted) scalar containing e.g. ": " breaks re-parsing of the
+    generated pack.yml (build_packs.py fell back to defaults for every field
+    when this happened), so round-trip the plain form through the YAML
+    parser before trusting it.
+    """
+    plain = f"{key}: {value}"
+    try:
+        parsed = yaml.safe_load(plain)
+    except yaml.YAMLError:
+        parsed = None
+    if isinstance(parsed, dict) and parsed.get(key) == value:
+        return plain
+    return f"{key}: {json.dumps(value)}"
+
+
 def _rule_lines(entries: list[RuleEntry]) -> list[str]:
     pad = max((len(e.rule_id) for e in entries), default=0) + 3
     lines = []
@@ -310,7 +329,7 @@ def format_pack_yml(
         ln("description: >")
         out.extend(_wrap(desc))
     else:
-        ln(f"description: {desc}")
+        ln(_scalar_line("description", desc))
 
     ln(f"os: {meta['os']}")
     ln(f"level: {meta['level']}")
