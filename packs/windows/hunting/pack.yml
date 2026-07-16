@@ -120,6 +120,7 @@ attack_coverage:
   - T1543.003
   - T1546
   - T1546.001
+  - T1546.003
   - T1547
   - T1547.001
   - T1547.003
@@ -236,6 +237,7 @@ rules:
           - 7595ba94-cf3b-4471-aa03-4f6baa9e5fad     # Important Scheduled Task Deleted/Disabled
           - 614cf376-6651-47c4-9dcc-6b9527f749f4     # Suspicious Scheduled Task Update
           - 18beca67-ab3e-4ee3-ba7a-a46ca8d7d0cc     # Sysmon Channel Reference Deletion
+          - f6c68d5f-e101-4b86-8c84-7d96851fd65c     # T1047 Wmiprvse Wbemcomn DLL Hijack
           - 0b0ea3cc-99c8-4730-9c53-45deee2a4c86     # Microsoft Defender Blocked from Loading Unsigned DLL
           - 8289bf8c-4aca-4f5a-9db3-dc3d7afe5c10     # Unsigned Binary Loaded From Suspicious Location
           - 4d7f1827-1637-4def-8d8a-fd254f9454df     # Sysmon Application Crashed
@@ -267,6 +269,7 @@ rules:
           - 06d71506-7beb-4f22-8888-e2e5e2ca7fd8     # Mimikatz Use
           - 360a1340-398a-46b6-8d06-99b905dc69d2     # Windows Defender Grace Period Expired
           - a0a278fe-2c0e-4de2-ac3c-c68b08a9ba98     # LSASS Access Detected via Attack Surface Reduction
+          - 97b9ce1e-c5ab-11ea-87d0-0242ac130003     # PSExec and WMI Process Creations Block
           - a3ab73f1-bd46-4319-8f06-4b20d0617886     # Windows Defender Exploit Guard Tamper
           - bc275be9-0bec-4d77-8c8f-281a2df6710f     # Windows Defender Malware And PUA Scanning Disabled
           - ea9bf0fa-edec-4fb8-8b78-b119f2528186     # Windows Defender AMSI Trigger Detected
@@ -352,6 +355,8 @@ rules:
           - 155dbf56-e0a4-4dd0-8905-8a98705045e8     # UAC Bypass Abusing Winsat Path Parsing - File
           - 68578b43-65df-4f81-9a9b-92f32711a951     # UAC Bypass Using Windows Media Player - File
           - 74a2b37d-fea4-41e0-9ac7-c9fbcf1f60cc     # WinRAR Creating Files in Startup Locations
+          - 8d5aca11-22b3-4f22-b7ba-90e60533e1fb     # Wmiexec Default Output File
+          - 614a7e17-5643-4d89-b6fe-f9df1a79641c     # Wmiprvse Wbemcomn DLL Hijack - File
           - 75e508f7-932d-4ebc-af77-269237a84ce1     # DLL Loaded From Suspicious Location Via Cmspt.EXE
           - 8cde342c-ba48-4b74-b615-172c330f2e93     # Suspicious Renamed Comsvcs DLL Loaded By Rundll32
           - bdc64095-d59a-42a2-8588-71fd9c9d9abc     # Suspicious Unsigned Dbghelp/Dbgcore DLL Loaded
@@ -390,6 +395,7 @@ rules:
           - a5ea83a7-05a5-44c1-be2e-addccbbd8c03     # UAC Bypass With Fake DLL
           - 416bc4a2-7217-4519-8dc7-c3271817f1d5     # Suspicious Loading of Dbgcore/Dbghelp DLLs from Uncommon Location
           - 0cbe38c0-270c-41d9-ab79-6e5a9a669290     # Trusted Path Bypass via Windows Directory Spoofing
+          - 7707a579-e0d8-4886-a853-ce47e4575aaa     # Wmiprvse Wbemcomn DLL Hijack
           - 5205613d-2a63-4412-a895-3a2458b587b3     # Network Connection Initiated By AddinUtil.EXE
           - 0dba975d-a193-4ed1-a067-424df57570d1     # Uncommon Network Connection Initiated By Certutil.EXE
           - efafe0bf-4238-479e-af8f-797bd3490d2d     # Outbound Network Connection Initiated By Cmstp.EXE
@@ -586,6 +592,7 @@ rules:
           - 37c1333a-a0db-48be-b64b-7393b2386e3b     # Hacktool Execution - PE Metadata
           - ca621ba5-54ab-4035-9942-d378e6fcde3c     # HackTool - HandleKatz LSASS Dumper Execution
           - 85d23b42-9a9d-4f8f-b3d7-d2733c1d58f5     # HackTool - HollowReaper Execution
+          - 10c14723-61c7-4c75-92ca-9af245723ad2     # HackTool - Potential Impacket Lateral Movement Activity
           - b99a1518-1ad5-4f65-bc95-1ffff97a8fd0     # HackTool - Inveigh Execution
           - b222df08-0e07-11eb-adc1-0242ac120002     # Invoke-Obfuscation CLIP+ Launcher
           - 4bf943c6-5146-4273-98dd-e958fd1e3abf     # Invoke-Obfuscation Obfuscated IEX Invocation
@@ -793,6 +800,7 @@ rules:
           - f2c64357-b1d2-41b7-849f-34d2682c0fad     # Suspicious Command Patterns In Scheduled Task Creation
           - 89ca78fd-b37c-4310-b3d3-81a023f83936     # Schtasks Creation Or Modification With SYSTEM Privileges
           - 9f8573c9-22b4-40e3-89c1-72bc2b8d49ab     # Scheduled Task Creation Masquerading as System Processes
+          - f6d1dd2f-b8ce-40ca-bc23-062efb686b34     # Script Event Consumer Spawning Process
           - f3d39c45-de1a-4486-a687-ab126124f744     # Sdiagnhost Calling Suspicious Child Process
           - 835e75bf-4bfd-47a4-b8a6-b766cac8bcb7     # Uncommon Child Process Of Setres.EXE
           - 78f10490-f2f4-4d19-a75b-4e0683bf3b8d     # Suspicious Speech Runtime Binary Child Process
@@ -874,6 +882,7 @@ rules:
           - 51cbac1e-eee3-4a90-b1b7-358efb81fa0a     # Potential Windows Defender Tampering Via Wmic.EXE
           - 8d63dadf-b91b-4187-87b6-34a1114577ea     # Potential Remote SquiblyTwo Technique Execution
           - e1693bc8-7168-4eab-8718-cdcaa68a1738     # Suspicious WMIC Execution Via Office Process
+          - 3c89a1e8-0fba-449e-8f1b-8409d6267ec8     # Suspicious Process Created Via Wmic.EXE
           - 847d5ff3-8a31-4737-a970-aeae8fe21765     # Potential Tampering With Security Products Via WMIC
           - 8a582fe2-0882-4b89-a82a-da6b2dc32937     # Suspicious WmiPrvSE Child Process
           - 99b7460d-c9f1-40d7-a316-1f36f61d52ee     # Cscript/Wscript Uncommon Script Extension Execution
@@ -982,6 +991,7 @@ rules:
           - bbf59793-6efb-4fa1-95ca-a7d288e52c88     # Winlogon Notify Key Logon Persistence
           - 815cd91b-7dbc-4247-841a-d7dd1392b0a8     # Sysmon Configuration Error
           - 1f2b5353-573f-4880-8e33-7d04dcf97744     # Sysmon Configuration Modification
+          - 83844185-1c5b-45bc-bcf3-b5bf3084ca5b     # Suspicious Encoded Scripts in a WMI Consumer
           - fe21810c-2a8c-478f-8dd3-5a287fb2a0e0     # Suspicious Scripting in a WMI Consumer
     excludes:
         sigma:
