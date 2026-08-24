@@ -1,0 +1,104 @@
+name: Sigma Sync
+
+on:
+  schedule:
+    - cron: '0 6 1 * *' # 06:00 UTC on the 1st of every month
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  sync:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows, linux, macos]
+    concurrency:
+      group: sigma-sync-${{ matrix.os }}
+      cancel-in-progress: false
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      OS: ${{ matrix.os }}
+      BRANCH: sigma-sync/${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: astral-sh/setup-uv@v5
+
+      - name: Install dependencies
+        run: uv sync
+
+      - name: Diff against upstream SigmaHQ/sigma
+        run: |
+          uv run python tools/download_sigma.py --diff --json --os "$OS" > "$RUNNER_TEMP/diff.json"
+
+      - name: Check for changes
+        id: check
+        run: |
+          MISSING=$(jq --arg os "$OS" '.[$os].missing | length' "$RUNNER_TEMP/diff.json")
+          CHANGED=$(jq --arg os "$OS" '.[$os].changed | length' "$RUNNER_TEMP/diff.json")
+          echo "missing=$MISSING" >> "$GITHUB_OUTPUT"
+          echo "changed=$CHANGED" >> "$GITHUB_OUTPUT"
+          if [ "$MISSING" -gt 0 ] || [ "$CHANGED" -gt 0 ]; then
+            echo "has_changes=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "has_changes=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Apply new and changed rules
+        if: steps.check.outputs.has_changes == 'true'
+        run: |
+          uv run python tools/download_sigma.py --os "$OS"
+          uv run python tools/download_sigma.py --update-changed --os "$OS"
+
+      - name: Build PR body
+        if: steps.check.outputs.has_changes == 'true'
+        run: |
+          jq -r --arg os "$OS" '
+            .[$os] as $d |
+            "## Sigma rule sync — \($os)\n\n" +
+            "Upstream: **\($d.upstream_count)** rules · Local before sync: **\($d.local_count)** rules\n\n" +
+            (if ($d.missing | length) > 0 then
+              "### New rules (\($d.missing | length))\n\n" +
+              ([$d.missing[] | "- `\(.id)` — `\(.upstream_path)`"] | join("\n")) + "\n\n"
+            else "" end) +
+            (if ($d.changed | length) > 0 then
+              "### Changed rules (\($d.changed | length))\n\n" +
+              ([$d.changed[] | "- `\(.id)` — `\(.local_path)` — changed: \(.fields | join(", "))"] | join("\n")) + "\n\n"
+            else "" end) +
+            "---\n*Automated monthly sync from [SigmaHQ/sigma](https://github.com/SigmaHQ/sigma/tree/master/rules/\($os)). Review the diff and merge to apply.*"
+          ' "$RUNNER_TEMP/diff.json" > "$RUNNER_TEMP/pr-body.md"
+
+          cat "$RUNNER_TEMP/pr-body.md"
+
+      - name: Commit changes
+        if: steps.check.outputs.has_changes == 'true'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git checkout -B "$BRANCH"
+          git add "rules/sigma/$OS"
+          git commit -m "chore(sigma): sync $OS rules from upstream ($(date -u +%Y-%m-%d))"
+          git push --force origin "$BRANCH"
+
+      - name: Create or update PR
+        if: steps.check.outputs.has_changes == 'true'
+        run: |
+          TITLE="chore(sigma): sync $OS rules from upstream ($(date -u +%Y-%m-%d))"
+          EXISTING=$(gh pr list --head "$BRANCH" --base master --state open --json number -q '.[0].number')
+
+          if [ -z "$EXISTING" ]; then
+            gh pr create \
+              --title "$TITLE" \
+              --body-file "$RUNNER_TEMP/pr-body.md" \
+              --base master \
+              --head "$BRANCH"
+          else
+            gh pr edit "$EXISTING" \
+              --title "$TITLE" \
+              --body-file "$RUNNER_TEMP/pr-body.md"
+          fi
