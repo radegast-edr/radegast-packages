@@ -1,0 +1,132 @@
+name: Pack Sync
+
+on:
+  push:
+    branches: [master]
+    paths:
+      - 'rules/sigma/**'
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  discover:
+    runs-on: ubuntu-latest
+    outputs:
+      packs: ${{ steps.discover.outputs.packs }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: astral-sh/setup-uv@v5
+
+      - name: Install dependencies
+        run: uv sync
+
+      - name: Discover packs with sigma content
+        id: discover
+        run: |
+          PACKS_JSON=$(uv run python tools/sync_packs.py --list --json)
+          echo "packs<<EOF" >> "$GITHUB_OUTPUT"
+          echo "$PACKS_JSON" >> "$GITHUB_OUTPUT"
+          echo "EOF" >> "$GITHUB_OUTPUT"
+
+  sync:
+    needs: discover
+    if: needs.discover.outputs.packs != '[]'
+    strategy:
+      fail-fast: false
+      matrix:
+        include: ${{ fromJson(needs.discover.outputs.packs) }}
+    concurrency:
+      group: pack-sync-${{ matrix.os }}-${{ matrix.pack }}
+      cancel-in-progress: false
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      OS: ${{ matrix.os }}
+      PACK: ${{ matrix.pack }}
+      BRANCH: pack-sync/${{ matrix.os }}-${{ matrix.pack }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: astral-sh/setup-uv@v5
+
+      - name: Install dependencies
+        run: uv sync
+
+      - name: Diff pack against rules/sigma
+        run: |
+          uv run python tools/sync_packs.py --diff --json --os "$OS" --pack "$PACK" > "$RUNNER_TEMP/diff.json"
+
+      - name: Check for drift
+        id: check
+        run: |
+          DRIFTED=$(jq '.[0].drifted | length' "$RUNNER_TEMP/diff.json")
+          ORPHANED=$(jq '.[0].orphaned | length' "$RUNNER_TEMP/diff.json")
+          echo "drifted=$DRIFTED" >> "$GITHUB_OUTPUT"
+          echo "orphaned=$ORPHANED" >> "$GITHUB_OUTPUT"
+          echo "has_drift=$([ "$DRIFTED" -gt 0 ] && echo true || echo false)" >> "$GITHUB_OUTPUT"
+
+          if [ "$ORPHANED" -gt 0 ]; then
+            {
+              echo "### ⚠️ $OS/$PACK: $ORPHANED orphaned pack rule(s)"
+              echo ""
+              echo "These rule IDs exist in \`packs/$OS/$PACK/sigma/\` but no longer exist anywhere under \`rules/sigma/$OS/\`. Not auto-removed -- review manually."
+              echo ""
+              jq -r '.[0].orphaned[] | "- `\(.id)` — `\(.pack_path)`"' "$RUNNER_TEMP/diff.json"
+              echo ""
+            } >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+      - name: Apply drifted rules
+        if: steps.check.outputs.has_drift == 'true'
+        run: uv run python tools/sync_packs.py --update --os "$OS" --pack "$PACK"
+
+      - name: Build PR body
+        if: steps.check.outputs.has_drift == 'true'
+        run: |
+          jq -r '
+            .[0] as $d |
+            "## Pack sync — \($d.os)/\($d.pack)\n\n" +
+            "Refreshes the sigma rule copies in this pack to match the current content in `rules/sigma/\($d.os)/`.\n\n" +
+            "### Changed rules (\($d.drifted | length))\n\n" +
+            ([$d.drifted[] | "- `\(.id)` — `\(.pack_path)` — changed: \(.fields | join(", "))"] | join("\n")) + "\n\n" +
+            (if ($d.orphaned | length) > 0 then
+              "### ⚠️ Orphaned rules (\($d.orphaned | length)) -- not touched by this PR\n\n" +
+              "These IDs are in this pack but no longer exist under `rules/sigma/\($d.os)/`. Review manually.\n\n" +
+              ([$d.orphaned[] | "- `\(.id)` — `\(.pack_path)`"] | join("\n")) + "\n\n"
+            else "" end) +
+            "---\n*Automated sync from `rules/sigma/\($d.os)/`. Merging this PR will trigger the Pack Release workflow.*"
+          ' "$RUNNER_TEMP/diff.json" > "$RUNNER_TEMP/pr-body.md"
+
+          cat "$RUNNER_TEMP/pr-body.md"
+
+      - name: Commit changes
+        if: steps.check.outputs.has_drift == 'true'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git checkout -B "$BRANCH"
+          git add "packs/$OS/$PACK"
+          git commit -m "chore(packs): sync $OS/$PACK from rules/sigma ($(date -u +%Y-%m-%d))"
+          git push --force origin "$BRANCH"
+
+      - name: Create or update PR
+        if: steps.check.outputs.has_drift == 'true'
+        run: |
+          TITLE="chore(packs): sync $OS/$PACK from rules/sigma ($(date -u +%Y-%m-%d))"
+          EXISTING=$(gh pr list --head "$BRANCH" --base master --state open --json number -q '.[0].number')
+
+          if [ -z "$EXISTING" ]; then
+            gh pr create \
+              --title "$TITLE" \
+              --body-file "$RUNNER_TEMP/pr-body.md" \
+              --base master \
+              --head "$BRANCH"
+          else
+            gh pr edit "$EXISTING" \
+              --title "$TITLE" \
+              --body-file "$RUNNER_TEMP/pr-body.md"
+          fi
