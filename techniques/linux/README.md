@@ -1,15 +1,15 @@
-# Windows Technique Priority List
+# Linux Technique Priority List
 
 This folder holds the ranked ATT&CK technique priority list used to decide what
-Windows detection content to build next, plus the mapping data used to keep
+Linux detection content to build next, plus the mapping data used to keep
 that list in sync with MITRE ATT&CK revisions.
 
 | File | Purpose |
 |---|---|
-| `windows_top_techniques.json` | Ranked list of ATT&CK techniques (and their sub-techniques) relevant to Windows, scored by an external prioritization pipeline. |
-| `t1562_v19_mapping.json` | Source-of-truth mapping for the ATT&CK v19 revision that revoked `T1562` and replaced it with `T1685`-`T1690`. Kept for reference/audit — see [ATT&CK v19 migration](#attck-v19-migration-t1562--t1685-t1690) below. |
+| `linux_top_techniques.json` | Ranked list of ATT&CK techniques (and their sub-techniques) relevant to Linux, scored by an external prioritization pipeline. |
+| `t1562_v19_mapping.json` | Source-of-truth mapping for the ATT&CK v19 revision that revoked `T1562` and replaced it with `T1685`-`T1690`. Kept for reference/audit — see [ATT&CK v19 migration](#attck-v19-migration-t1562--t1685-t1690) below. Identical to [`techniques/windows/t1562_v19_mapping.json`](../windows/t1562_v19_mapping.json) — the mapping is framework-wide, not OS-specific. |
 
-## `windows_top_techniques.json` schema
+## `linux_top_techniques.json` schema
 
 Each top-level entry:
 
@@ -32,7 +32,7 @@ Each top-level entry:
 ```
 
 Sub-technique entries carry no score of their own — only the parent technique
-is ranked. `rank` is contiguous across every *scored* entry (currently `1..290`,
+is ranked. `rank` is contiguous across every *scored* entry (currently `1..308`,
 no gaps); entries pending a score are appended at the end of the array with
 `rank: null` so the ranked ordering above them stays untouched.
 
@@ -44,39 +44,42 @@ guessed number.
 
 ## Cross-checking coverage
 
-`tools/crosscheck_coverage.py` (defaults to `--os windows`; pass `--os linux`
-for the [Linux list](../linux/README.md#cross-checking-coverage), or repeat
-`--os` / pass `--os all` to report on every OS in one run -- each OS is
-reported independently, there is no cross-OS comparison) compares this list
-against the ATT&CK technique tags actually present in
-`packs/windows/{essential,advanced,hunting}` (sigma rule tags, via
-`tools/search_packs.py`) to show what's covered, what's partially covered
-(only some sub-techniques), and what's missing entirely, weighted by
-rank/score so the highest-priority gaps surface first. For any technique
-with sub-techniques, the detail table also lists exactly which sub-technique
-ids are covered vs. missing. Entries with `scoring_status: pending_rescore`
-are excluded from the ranked stats and reported in their own section, since
-they have no score to weight by yet.
+`tools/crosscheck_coverage.py --os linux` compares this list against the
+ATT&CK technique tags actually present in `packs/linux/{essential,advanced,hunting}`
+(sigma rule tags, via `tools/search_packs.py`) to show what's covered, what's
+partially covered (only some sub-techniques), and what's missing entirely,
+weighted by rank/score so the highest-priority gaps surface first. For any
+technique with sub-techniques, the detail table also lists exactly which
+sub-technique ids are covered vs. missing. Entries with
+`scoring_status: pending_rescore` are excluded from the ranked stats and
+reported in their own section, since they have no score to weight by yet.
+Unlike Windows, there is no `linux/clickfix` pack to exclude. Repeat `--os`
+(or pass `--os all`) to also report on Windows in the same run -- each OS is
+reported independently, this is not a cross-OS comparison.
 
 ```sh
-python tools/crosscheck_coverage.py                    # gap list, top 25 by rank
-python tools/crosscheck_coverage.py --status all --top 0
-python tools/crosscheck_coverage.py --os windows --os linux
+python tools/crosscheck_coverage.py --os linux                    # gap list, top 25 by rank
+python tools/crosscheck_coverage.py --os linux --status all --top 0
+python tools/crosscheck_coverage.py --os linux --os windows
 ```
 
 ## ATT&CK v19 migration (T1562 → T1685-T1690)
 
 MITRE ATT&CK v19 (released 2026-04-28) split the **Defense Evasion** tactic
 into **Stealth** (`TA0005`) and **Defense Impairment** (`TA0112`), and revoked
-`T1562` "Impair Defenses," reorganizing its sub-techniques (plus two
-sub-techniques moved out of `T1070` "Indicator Removal") into six new
+`T1562` "Impair Defenses," reorganizing its sub-techniques (plus one
+sub-technique moved out of `T1070` "Indicator Removal") into six new
 techniques: `T1685`-`T1690`. `t1562_v19_mapping.json` records the full
 old-ID → new-ID mapping, the relationship type for each (`merged_into_parent`,
 `reissued`, `promoted_to_technique`, `new`, ...), and stub definitions for the
 new techniques — sourced from and verified against the live ATT&CK pages
-linked in its `metadata.sources`.
+linked in its `metadata.sources`. This migration mirrors the one already
+applied to [`techniques/windows/windows_top_techniques.json`](../windows/README.md#attck-v19-migration-t1562--t1685-t1690);
+two of the new sub-techniques are directly Linux-relevant:
+`T1685.004` "Disable or Modify Linux Audit System Log" and `T1685.006`
+"Clear Linux or Mac System Logs."
 
-Applying that mapping to `windows_top_techniques.json` involved:
+Applying that mapping to `linux_top_techniques.json` involved:
 
 - **Removed** the revoked `T1562` entry (was rank 1, score 3.61).
 - **Added `T1685` "Disable or Modify Tools"** at rank 1, inheriting T1562's
@@ -93,12 +96,12 @@ Applying that mapping to `windows_top_techniques.json` involved:
 - **Adjusted `T1070`** ("Indicator Removal"): removed sub-techniques
   `T1070.001`/`.002`, which moved to become `T1685.005`/`.006`.
 - Every new field (`name`, `description`, `url`, `detection`) was pulled from
-  the live ATT&CK technique pages rather than paraphrased or invented;
-  `mitigations` entries reuse the canonical `mid`-keyed objects already present
-  elsewhere in the file for consistency.
-- Rewriting the file via `json.dump(..., indent=4, ensure_ascii=False)` also
-  fixed two pre-existing data bugs (a stray non-UTF-8 byte and an unescaped
-  control character) — the file now round-trips through a plain `json.load()`.
+  the live ATT&CK technique pages rather than paraphrased or invented, reusing
+  the exact same content already verified for the Windows list (these fields
+  are framework text, not OS-specific); `mitigations` entries reuse the
+  canonical `mid`-keyed objects already present elsewhere in the file for
+  consistency.
+- The file was rewritten via `json.dump(..., indent=4, ensure_ascii=False)`.
 
 ### Playbook for the next ATT&CK revision
 
@@ -124,12 +127,13 @@ Applying that mapping to `windows_top_techniques.json` involved:
    `subtechniques` array.
 6. Rewrite the file with `json.dump(..., indent=4, ensure_ascii=False)` — this
    also normalizes any encoding issues.
-7. Re-run `tools/crosscheck_coverage.py` to sanity-check the new ranked list
-   against real pack coverage, and confirm any pending-rescore entries show up
-   in their own section.
+7. Re-run `tools/crosscheck_coverage.py --os linux` to sanity-check the new
+   ranked list against real pack coverage, and confirm any pending-rescore
+   entries show up in their own section.
 
 ### Changelog
 
-- **2026-08-13** — Migrated `T1562` → `T1685`-`T1690` per ATT&CK v19
-  (`t1562_v19_mapping.json`). `T1685` inherited T1562's rank/score; `T1686`-`T1690`
+- **2026-08-25** — Migrated `T1562` → `T1685`-`T1690` per ATT&CK v19
+  (`t1562_v19_mapping.json`), mirroring the Windows migration. `T1685`
+  inherited T1562's rank/score (unchanged: rank 1, score 3.61); `T1686`-`T1690`
   added as `pending_rescore`; `T1070.001`/`.002` moved under `T1685`.

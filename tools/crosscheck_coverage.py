@@ -1,13 +1,20 @@
-"""Cross-check ATT&CK technique coverage of the Windows sigma packs against
-the ranked priority list in techniques/windows/windows_top_techniques.json.
+"""Cross-check ATT&CK technique coverage of an OS's sigma packs against the
+ranked priority list in techniques/<os>/<os>_top_techniques.json.
+
+Each OS is reported independently -- this is not a cross-OS comparison, just
+"what am I missing" for whichever OS(es) you point it at. Pass --os more
+than once (or --os all) to get one report per OS in a single run.
 
 Usage:
-    python tools/crosscheck_coverage.py
-    python tools/crosscheck_coverage.py --status all
+    python tools/crosscheck_coverage.py                    # defaults to --os windows
+    python tools/crosscheck_coverage.py --os linux
+    python tools/crosscheck_coverage.py --os windows --os linux
+    python tools/crosscheck_coverage.py --os all
+    python tools/crosscheck_coverage.py --os linux --status all
     python tools/crosscheck_coverage.py --status covered --top 0
     python tools/crosscheck_coverage.py --status missing --top 50
 
-Packs checked: windows/essential, windows/advanced, windows/hunting.
+Packs checked: <os>/essential, <os>/advanced, <os>/hunting.
 windows/clickfix is intentionally excluded -- it targets a specific campaign,
 not general ATT&CK technique coverage.
 """
@@ -22,10 +29,24 @@ from pathlib import Path
 from search_packs import get_techniques
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
-TOP_TECHNIQUES_JSON = REPO_ROOT / "techniques" / "windows" / "windows_top_techniques.json"
 
 _TIERS = ["essential", "advanced", "hunting"]
-_PACK_REFS = {tier: f"windows/{tier}" for tier in _TIERS}
+
+
+def _top_techniques_json(os_name: str) -> Path:
+    return REPO_ROOT / "techniques" / os_name / f"{os_name}_top_techniques.json"
+
+
+def _pack_refs(os_name: str) -> dict[str, str]:
+    return {tier: f"{os_name}/{tier}" for tier in _TIERS}
+
+
+def _available_oses() -> list[str]:
+    """OSes that have a techniques/<os>/<os>_top_techniques.json ranked list."""
+    return sorted(
+        p.parent.name
+        for p in (REPO_ROOT / "techniques").glob("*/*_top_techniques.json")
+    )
 
 
 class SubTechnique:
@@ -87,11 +108,11 @@ def load_top_techniques(path: Path) -> list[dict]:
     return json.loads(raw, strict=False)
 
 
-def load_pack_coverage() -> tuple[dict[str, set[str]], set[str]]:
+def load_pack_coverage(pack_refs: dict[str, str]) -> tuple[dict[str, set[str]], set[str]]:
     """Return ({tier: technique_ids}, merged_technique_ids) for essential/advanced/hunting."""
     per_tier: dict[str, set[str]] = {}
     merged: set[str] = set()
-    for tier, pack_ref in _PACK_REFS.items():
+    for tier, pack_ref in pack_refs.items():
         techs = get_techniques(pack_ref)
         per_tier[tier] = techs
         merged |= techs
@@ -142,12 +163,30 @@ def pct(numerator: float, denominator: float) -> str:
     return f"{100 * numerator / denominator:.1f}%"
 
 
+def _subtech_detail_lines(t: Technique) -> list[str]:
+    """Which exact sub-technique ids are covered vs. missing for one technique."""
+    if not t.subtechniques:
+        return []
+    covered = [s.tid.split(".", 1)[1] for s in t.subtechniques if s.covered]
+    missing = [s.tid.split(".", 1)[1] for s in t.subtechniques if not s.covered]
+    lines = [
+        f"        covered ({len(covered)}/{len(t.subtechniques)}): "
+        + (" ".join(f".{s}" for s in covered) if covered else "(none)")
+    ]
+    if missing:
+        lines.append("        missing            : " + " ".join(f".{s}" for s in missing))
+    return lines
+
+
 def print_report(
     techniques: list[Technique],
     per_tier: dict[str, set[str]],
     merged: set[str],
     status_filter: str,
     top: int,
+    os_name: str,
+    top_techniques_json: Path,
+    pack_refs: dict[str, str],
 ) -> None:
     # Entries with rank=None have no score yet (e.g. techniques added by an ATT&CK
     # revision ahead of the next scoring pass) and are kept out of the ranked stats,
@@ -169,15 +208,16 @@ def print_report(
     known_ids = {t.tid for t in techniques} | {s.tid for t in techniques for s in t.subtechniques}
     extra = merged - known_ids
 
-    print("Windows Technique Coverage Report")
+    print(f"{os_name.capitalize()} Technique Coverage Report")
     print("=" * 70)
-    print(f"Priority list : {TOP_TECHNIQUES_JSON.relative_to(REPO_ROOT)}")
+    print(f"Priority list : {top_techniques_json.relative_to(REPO_ROOT)}")
     print(f"                ({total} ranked techniques, {len(all_subs)} subtechniques", end="")
     if pending:
         print(f", {len(pending)} pending re-score)")
     else:
         print(")")
-    print("Packs checked : " + ", ".join(_PACK_REFS.values()) + "  (clickfix excluded)")
+    clickfix_note = "  (clickfix excluded)" if os_name == "windows" else ""
+    print("Packs checked : " + ", ".join(pack_refs.values()) + clickfix_note)
     print()
     print("Coverage summary")
     print("-" * 70)
@@ -227,6 +267,8 @@ def print_report(
             f"{t.rank:>4}  {t.tid:<11} {t.score:>6.2f}  {t.status:<8} {tier:<10} "
             f"{subtech:>9}  {t.name}"
         )
+        for line in _subtech_detail_lines(t):
+            print(line)
 
     if pending:
         print()
@@ -241,6 +283,8 @@ def print_report(
             subtech = f"{t.sub_covered_count}/{len(t.subtechniques)}" if t.subtechniques else "-"
             tier = t.first_tier or "-"
             print(f"{t.tid:<11} {t.status:<8} {tier:<10} {subtech:>9}  {t.name}")
+            for line in _subtech_detail_lines(t):
+                print(line)
 
 
 # --------------------------------------------------------------------------- #
@@ -251,17 +295,29 @@ def print_report(
 def _build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         description=(
-            "Cross-check ATT&CK technique coverage of the Windows sigma packs "
-            "against the ranked priority list in windows_top_techniques.json."
+            "Cross-check ATT&CK technique coverage of an OS's sigma packs "
+            "against the ranked priority list in <os>_top_techniques.json."
         ),
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 examples:
   python tools/crosscheck_coverage.py
-  python tools/crosscheck_coverage.py --status all
+  python tools/crosscheck_coverage.py --os linux
+  python tools/crosscheck_coverage.py --os windows --os linux
+  python tools/crosscheck_coverage.py --os all
+  python tools/crosscheck_coverage.py --os linux --status all
   python tools/crosscheck_coverage.py --status covered --top 0
   python tools/crosscheck_coverage.py --status missing --top 50
 """,
+    )
+    parser.add_argument(
+        "--os",
+        dest="os_names",
+        action="append",
+        default=None,
+        help="Which OS's priority list/packs to check; repeat for more than one "
+        "(e.g. --os windows --os linux), or pass 'all' for every OS that has a "
+        "techniques/<os>/<os>_top_techniques.json. Default: windows.",
     )
     parser.add_argument(
         "--status",
@@ -278,12 +334,30 @@ examples:
     return parser
 
 
+def _resolve_os_names(requested: list[str] | None) -> list[str]:
+    if requested is None:
+        return ["windows"]
+    if any(name == "all" for name in requested):
+        return _available_oses()
+    return requested
+
+
 def main() -> None:
     args = _build_parser().parse_args()
-    raw_techniques = load_top_techniques(TOP_TECHNIQUES_JSON)
-    per_tier, merged = load_pack_coverage()
-    techniques = build_techniques(raw_techniques, per_tier, merged)
-    print_report(techniques, per_tier, merged, args.status, args.top)
+    os_names = _resolve_os_names(args.os_names)
+    for i, os_name in enumerate(os_names):
+        if i:
+            print()
+            print()
+        top_techniques_json = _top_techniques_json(os_name)
+        pack_refs = _pack_refs(os_name)
+        raw_techniques = load_top_techniques(top_techniques_json)
+        per_tier, merged = load_pack_coverage(pack_refs)
+        techniques = build_techniques(raw_techniques, per_tier, merged)
+        print_report(
+            techniques, per_tier, merged, args.status, args.top,
+            os_name, top_techniques_json, pack_refs,
+        )
 
 
 if __name__ == "__main__":
