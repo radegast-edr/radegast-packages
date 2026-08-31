@@ -13,6 +13,7 @@ Usage:
     python tools/crosscheck_coverage.py --os linux --status all
     python tools/crosscheck_coverage.py --status covered --top 0
     python tools/crosscheck_coverage.py --status missing --top 50
+    python tools/crosscheck_coverage.py --os all --status all --top 0 --csv coverage.csv
 
 Packs checked: <os>/essential, <os>/advanced, <os>/hunting.
 windows/clickfix is intentionally excluded -- it targets a specific campaign,
@@ -22,6 +23,7 @@ not general ATT&CK technique coverage.
 from __future__ import annotations
 
 import argparse
+import csv
 import json
 import sys
 from pathlib import Path
@@ -178,6 +180,46 @@ def _subtech_detail_lines(t: Technique) -> list[str]:
     return lines
 
 
+def select_techniques(
+    ranked: list[Technique], status_filter: str, top: int
+) -> list[Technique]:
+    by_status = {
+        "covered": [t for t in ranked if t.status == "covered"],
+        "partial": [t for t in ranked if t.status == "partial"],
+        "missing": [t for t in ranked if t.status == "missing"],
+    }
+    if status_filter == "all":
+        selected = list(ranked)
+    elif status_filter == "gaps":
+        selected = by_status["partial"] + by_status["missing"]
+    else:
+        selected = by_status[status_filter]
+    selected.sort(key=lambda t: t.rank)
+    if top:
+        selected = selected[:top]
+    return selected
+
+
+CSV_FIELDS = [
+    "os", "rank", "tid", "name", "score", "status", "tier",
+    "subtech_covered", "subtech_total",
+]
+
+
+def technique_csv_row(os_name: str, t: Technique) -> dict[str, object]:
+    return {
+        "os": os_name,
+        "rank": t.rank if t.rank is not None else "",
+        "tid": t.tid,
+        "name": t.name,
+        "score": t.score if t.rank is not None else "",
+        "status": t.status,
+        "tier": t.first_tier or "",
+        "subtech_covered": t.sub_covered_count,
+        "subtech_total": len(t.subtechniques),
+    }
+
+
 def print_report(
     techniques: list[Technique],
     per_tier: dict[str, set[str]],
@@ -243,16 +285,7 @@ def print_report(
             f"priority list (e.g. deprecated/renamed ATT&CK ids)."
         )
 
-    by_status = {"covered": covered, "partial": partial, "missing": missing}
-    if status_filter == "all":
-        selected = list(ranked)
-    elif status_filter == "gaps":
-        selected = partial + missing
-    else:
-        selected = by_status[status_filter]
-    selected.sort(key=lambda t: t.rank)
-    if top:
-        selected = selected[:top]
+    selected = select_techniques(ranked, status_filter, top)
 
     label = "ALL" if status_filter == "all" else status_filter.upper()
     print()
@@ -308,6 +341,7 @@ examples:
   python tools/crosscheck_coverage.py --os linux --status all
   python tools/crosscheck_coverage.py --status covered --top 0
   python tools/crosscheck_coverage.py --status missing --top 50
+  python tools/crosscheck_coverage.py --os all --status all --top 0 --csv coverage.csv
 """,
     )
     parser.add_argument(
@@ -331,6 +365,15 @@ examples:
         default=25,
         help="Limit the detail table to the N highest-priority rows (0 = no limit; default: 25)",
     )
+    parser.add_argument(
+        "--csv",
+        dest="csv_path",
+        type=Path,
+        default=None,
+        help="Also write the detail table rows (same --status/--top filter, plus any "
+        "pending re-score techniques) to this CSV file. If checking multiple OSes, "
+        "all rows are combined into one file with an 'os' column.",
+    )
     return parser
 
 
@@ -345,6 +388,7 @@ def _resolve_os_names(requested: list[str] | None) -> list[str]:
 def main() -> None:
     args = _build_parser().parse_args()
     os_names = _resolve_os_names(args.os_names)
+    csv_rows: list[dict[str, object]] = []
     for i, os_name in enumerate(os_names):
         if i:
             print()
@@ -358,6 +402,19 @@ def main() -> None:
             techniques, per_tier, merged, args.status, args.top,
             os_name, top_techniques_json, pack_refs,
         )
+        if args.csv_path:
+            ranked = [t for t in techniques if t.rank is not None]
+            pending = [t for t in techniques if t.rank is None]
+            selected = select_techniques(ranked, args.status, args.top)
+            csv_rows.extend(technique_csv_row(os_name, t) for t in selected)
+            csv_rows.extend(technique_csv_row(os_name, t) for t in pending)
+
+    if args.csv_path:
+        with args.csv_path.open("w", newline="", encoding="utf-8") as f:
+            writer = csv.DictWriter(f, fieldnames=CSV_FIELDS)
+            writer.writeheader()
+            writer.writerows(csv_rows)
+        print(f"\nWrote {len(csv_rows)} row(s) to {args.csv_path}", file=sys.stderr)
 
 
 if __name__ == "__main__":
