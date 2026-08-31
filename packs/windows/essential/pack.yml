@@ -72,7 +72,9 @@ attack_coverage:
   - T1201
   - T1202
   - T1203
+  - T1204
   - T1204.002
+  - T1204.004
   - T1211
   - T1218
   - T1218.001
@@ -628,6 +630,15 @@ rules:
           - 0eb46774-f1ab-4a74-8238-1155855f2263     # Disable Windows Defender Functionalities Via Registry Keys
           - bbf59793-6efb-4fa1-95ca-a7d288e52c88     # Winlogon Notify Key Logon Persistence
           - fe21810c-2a8c-478f-8dd3-5a287fb2a0e0     # Suspicious Scripting in a WMI Consumer
+          - c7a74c80-ba5a-486e-9974-ab9e682bc5e4     # File With Uncommon Extension Created By An Office Application
+          - b447f7de-1e53-4cbf-bfb4-f1f6d0b04e4e     # Suspicious Binaries and Scripts in Public Folder
+          - 90217a70-13fc-48e4-b3db-0d836c5824ac     # GAC DLL Loaded Via Office Applications
+          - e6ce8457-68b1-485b-9bdd-3c2b5d679aa9     # VBA DLL Loaded Via Office Application
+          - 208748f7-881d-47ac-a29c-07ea84bf691d     # Suspicious Outlook Child Process
+          - aa3a6f94-890e-4e22-b634-ffdfd54792cc     # Suspicious Binary In User Directory Spawned From Office Application
+          - b5b29e4e-31fa-4fdf-b058-296e7a1aa0c2     # Suspicious FileFix Execution Pattern
+          - dd8756e7-a3a0-4768-b47e-8f545d1a751c     # Suspicious LNK Command-Line Padding with Whitespace Characters
+          - 4fee3d51-8069-4a4c-a0f7-924fcaff2c70     # FileFix - Command Evidence in TypedPaths
         ioc:
           - ioc-eicar-test     # EICAR test file (MD5)
     excludes:
