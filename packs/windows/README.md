@@ -89,6 +89,8 @@ python tools/populate_pack.py \
   --technique T1003 T1027 T1053 T1055 T1059 T1070 T1082 T1083 T1105 T1112 T1134 T1218 T1518 T1543 T1547 T1552 T1564 T1685
 ```
 
+T1204 was added separately, per rule, via `--description` filters rather than a blanket `--technique T1204` — see the [Notes](#notes) section below for why.
+
 ---
 
 ## windows-hunting
@@ -128,6 +130,8 @@ python tools/populate_pack.py \
   --level critical high \
   --technique T1003 T1027 T1036 T1047 T1053 T1055 T1055.012 T1059 T1059.001 T1070 T1078.003 T1082 T1083 T1105 T1106 T1112 T1134 T1140 T1218 T1497 T1518 T1543 T1547 T1548 T1552 T1564 T1574 T1620 T1685
 ```
+
+T1204 was added separately, per rule, via `--description` filters rather than a blanket `--technique T1204` — see the [Notes](#notes) section below for why.
 
 ---
 
