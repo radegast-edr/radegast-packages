@@ -8,6 +8,9 @@ Usage:
     python tools/search_sigma.py --technique T1059.001 T1078 --os windows
     python tools/search_sigma.py --id eb2d07d4-49cb-4523-801a-da002df36602
     python tools/search_sigma.py --id eb2d07d4 --os windows
+    python tools/search_sigma.py --level critical
+    python tools/search_sigma.py --level critical high --os windows
+    python tools/search_sigma.py --level high --technique T1059
     python tools/search_sigma.py --stats
     python tools/search_sigma.py --stats --os windows
     python tools/search_sigma.py --technique T1059 --csv matches.csv
@@ -18,6 +21,8 @@ Options:
                                 Case-insensitive. A parent ID (T1059) also matches sub-techniques.
     --id TEXT                    Full or partial rule id (UUID) to match, e.g. eb2d07d4-...
                                 Case-insensitive substring match.
+    --level LEVEL [LEVEL ...]   Filter by severity level(s): critical, high, medium, low,
+                                informational. Case-insensitive; multiple levels are OR-ed.
     --os OS [OS ...]            Restrict search to one or more OS subtrees
                                 (choices: windows linux macos; default: all)
     --case-sensitive            Disable case-folding (default: case-insensitive)
@@ -40,6 +45,9 @@ REPO_ROOT = Path(__file__).resolve().parent.parent
 SIGMA_DIR = REPO_ROOT / "rules" / "sigma"
 
 ALL_OS: tuple[str, ...] = ("windows", "linux", "macos")
+
+# Sigma severity levels, ordered most to least severe.
+ALL_LEVELS: tuple[str, ...] = ("critical", "high", "medium", "low", "informational")
 
 
 # --------------------------------------------------------------------------- #
@@ -93,6 +101,11 @@ def matches(doc: dict, args: argparse.Namespace) -> bool:
         if not _text_match(doc.get("id"), args.id, args.case_sensitive):
             return False
 
+    if args.level:
+        # Levels are a fixed vocabulary, so always compare case-folded.
+        if (doc.get("level") or "unknown").lower() not in args.level:
+            return False
+
     return True
 
 
@@ -134,11 +147,12 @@ def print_stats(stats: dict) -> None:
 
     print("Alerts by Severity")
     print("-" * 30)
-    for level in ("critical", "high", "medium", "low", "informational", "unknown"):
+    known_levels = ALL_LEVELS + ("unknown",)
+    for level in known_levels:
         if level in severity_counts:
             print(f"  {level:<15} {severity_counts[level]:>5}")
     for level, count in sorted(severity_counts.items()):
-        if level not in ("critical", "high", "medium", "low", "informational", "unknown"):
+        if level not in known_levels:
             print(f"  {level:<15} {count:>5}")
     print(f"  {'TOTAL':<15} {sum(severity_counts.values()):>5}")
 
@@ -225,6 +239,17 @@ def parse_args() -> argparse.Namespace:
         help="Full or partial rule id (UUID) to match, case-insensitive substring match",
     )
     parser.add_argument(
+        "--level",
+        nargs="+",
+        type=str.lower,
+        choices=list(ALL_LEVELS),
+        metavar="LEVEL",
+        help=(
+            "Filter by severity level(s). Case-insensitive; multiple levels are OR-ed. "
+            f"Choices: {', '.join(ALL_LEVELS)}"
+        ),
+    )
+    parser.add_argument(
         "--case-sensitive",
         action="store_true",
         help="Disable case-folding (default: case-insensitive)",
@@ -255,8 +280,11 @@ def main() -> None:
         print_stats(stats)
         return
 
-    if args.description is None and not args.technique and args.id is None:
-        print("No search criteria provided. Use --description TEXT, --technique ID, --id ID, or --stats.")
+    if args.description is None and not args.technique and args.id is None and not args.level:
+        print(
+            "No search criteria provided. Use --description TEXT, --technique ID, "
+            "--id ID, --level LEVEL, or --stats."
+        )
         print("Run with --help for usage.")
         sys.exit(1)
 
