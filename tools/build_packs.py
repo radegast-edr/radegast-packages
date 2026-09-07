@@ -256,7 +256,7 @@ def _build_meta(os_name: str, level: str, existing: dict) -> dict:
     meta.setdefault("id", f"{os_name}-{level}")
     meta.setdefault("description", f"TODO: describe {os_name}-{level} pack.")
     meta["os"] = os_name
-    meta["level"] = level
+    meta.setdefault("level", level)
     meta.setdefault("pack_schema_version", 1)
     meta.setdefault("requires_rustinel", ">=1.0.2")
     meta.setdefault("default", False)
