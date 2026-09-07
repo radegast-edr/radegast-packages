@@ -2,7 +2,13 @@
 
 Detection packs for standalone Windows workstations, organized by detection maturity. Domain-joined tactics/techniques (lateral movement, Kerberos, AD enumeration) are excluded from all packs.
 
-All packs include only **critical** and **high** severity rules.
+Severity coverage varies by tier:
+
+- `windows-essential` and `windows-advanced` include only **critical** and **high** severity rules.
+- `windows-hunting` additionally includes **medium** and **low** severity rules for the same
+  techniques, consistent with its analyst-review remit.
+
+**informational** severity is excluded from all Windows tiers.
 
 ---
 
@@ -101,6 +107,11 @@ Extends `windows-advanced`. All essential and advanced techniques are included v
 
 **Expected false positive level:** High
 
+**Severity coverage:** critical, high, medium and low. This is the only Windows tier that reaches
+below `high`. It adds no new techniques over the list below — only lower-severity rules for
+techniques already in scope — which roughly doubles the pack's rule count relative to a
+critical/high-only build.
+
 ### Techniques added by this tier
 
 | Technique | Tactic | Name |
@@ -127,7 +138,7 @@ T1003, T1027, T1036, T1047, T1053, T1055, T1055.012, T1059, T1059.001, T1070, T1
 python tools/populate_pack.py \
   --os windows \
   --pack hunting \
-  --level critical high \
+  --level critical high medium low \
   --technique T1003 T1027 T1036 T1047 T1053 T1055 T1055.012 T1059 T1059.001 T1070 T1078.003 T1082 T1083 T1105 T1106 T1112 T1134 T1140 T1218 T1497 T1518 T1543 T1547 T1548 T1552 T1564 T1574 T1620 T1685
 ```
 
@@ -152,4 +163,6 @@ Deploy and validate each tier before progressing to the next:
 - T1078.003 is placed in `windows-hunting` rather than `windows-essential` despite being a standalone-host-relevant technique, because reliable detection requires behavioral context that a single event cannot provide.
 - T1685 is used in this pack in place of T1562 for Disable or Modify Tools, consistent with the updated technique identifier.
 - T1204 (User Execution) sub-technique T1204.001 and some T1204.004 rules are ClickFix/FileFix detections that live exclusively in the separate `windows-clickfix` pack (`packs/windows/clickfix/`), which targets a specific campaign rather than general ATT&CK coverage. A blanket `python tools/populate_pack.py --technique T1204` would prefix-match those sub-techniques and duplicate them here, so the 9 general (non-ClickFix) T1204-family rules were added individually via `--description "<unique substring>" --level critical high` instead. This also skipped 8 T1204.002/.004 rules that were already present in `windows-advanced`/`windows-hunting` only, leaving essential's T1204 footprint intentionally narrower until those are deliberately backfilled.
+- `windows-hunting` is populated across all four severity levels in a single command. Do **not** run a medium/low-only populate with `--sync` against it: `--sync` makes the pack match *exactly* the current criteria, so `--level medium low --sync` would delete every critical and high rule already in the pack. Always pass the full level list when syncing this tier.
+- A small number of hunting rules (13 at the time of the medium/low expansion, ~2% of those additions) carry a secondary domain-joined technique tag such as `attack.t1021.*`, `attack.t1003.006` (DCSync) or `attack.t1078.002`. These matched on an in-scope parent technique and were pulled in as a side effect; the pack's own technique list remains non-domain. Filter them at deployment if strict non-domain scoping is required.
 - The `--sync` flag can be appended to any populate command to remove rules from the pack that no longer match the current filter criteria.

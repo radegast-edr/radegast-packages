@@ -2,6 +2,8 @@
 
 Detection packs for standalone Linux hosts (RHEL/CentOS/Rocky and Ubuntu/Debian), organized by detection maturity. Domain-joined tactics/techniques (SSSD/Winbind-based AD enumeration, Kerberos) are excluded from all packs.
 
+Unlike the Windows packs, the Linux populate commands pass no `--level` filter, so **every** severity level (critical through informational) is included at all three tiers for the listed techniques. `linux-hunting` therefore already carries medium and low severity rules — no separate expansion step is required.
+
 ---
 
 ## Pack Tiers
@@ -92,6 +94,8 @@ Extends `linux-advanced`. All essential and advanced techniques are included via
 
 **Expected false positive level:** High
 
+**Severity coverage:** all levels. The populate command below carries no `--level` filter, so critical, high, medium, low and informational rules are all included for the techniques listed.
+
 ### Techniques added by this tier
 
 | Technique | Tactic | Name |
@@ -139,6 +143,7 @@ Deploy and validate each tier before progressing to the next:
 - T1112 (Modify Registry) covers the Linux equivalent: sysctl parameter modification and /proc/sys writes that disable kernel security features such as `kernel.yama.ptrace_scope`.
 - T1685 is used in this pack in place of T1562 for Impair Defenses, consistent with the updated technique identifier.
 - T1014 (Rootkit) detection via eBPF covers both kernel module rootkits (init_module/finit_module) and eBPF-based rootkits detectable via bpf() syscall program type inspection.
+- The Linux packs deliberately carry no `--level` filter, which is why every tier includes medium and low severity content that the equivalent Windows `essential`/`advanced` tiers exclude. Adding a `--level` filter to these commands would *narrow* the packs, not widen them.
 - The `--sync` flag can be appended to any populate command to remove rules from the pack that no longer match the current filter criteria.
 
 ---
