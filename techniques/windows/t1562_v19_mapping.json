@@ -1,0 +1,69 @@
+{
+  "metadata": {
+    "framework": "MITRE ATT&CK for Enterprise",
+    "version": "v19",
+    "released": "2026-04-28",
+    "change": "Defense Evasion tactic split into Stealth (TA0005) and Defense Impairment (TA0112). T1562 'Impair Defenses' was revoked and reorganized into techniques T1685-T1690.",
+    "new_tactic": { "id": "TA0112", "name": "Defense Impairment" },
+    "sources": [
+      "https://attack.mitre.org/resources/updates/updates-april-2026/",
+      "https://attack.mitre.org/techniques/T1685/",
+      "https://attack.mitre.org/techniques/T1686/",
+      "https://attack.mitre.org/techniques/T1562/"
+    ]
+  },
+  "revoked_parent": {
+    "old_id": "T1562",
+    "old_name": "Impair Defenses",
+    "status": "revoked",
+    "replaced_by": "T1685"
+  },
+  "mappings": [
+    { "old_id": "T1562",     "old_name": "Impair Defenses",                       "new_id": "T1685",     "new_name": "Disable or Modify Tools",             "relationship": "merged_into_parent" },
+    { "old_id": "T1562.001", "old_name": "Disable or Modify Tools",               "new_id": "T1685",     "new_name": "Disable or Modify Tools",             "relationship": "merged_into_parent" },
+    { "old_id": "T1562.006", "old_name": "Indicator Blocking",                    "new_id": "T1685",     "new_name": "Disable or Modify Tools",             "relationship": "merged_into_parent" },
+    { "old_id": "T1562.002", "old_name": "Disable Windows Event Logging",         "new_id": "T1685.001", "new_name": "Disable or Modify Windows Event Log", "relationship": "reissued" },
+    { "old_id": "T1562.008", "old_name": "Disable or Modify Cloud Logs",          "new_id": "T1685.002", "new_name": "Disable or Modify Cloud Log",          "relationship": "reissued" },
+    { "old_id": "T1562.011", "old_name": "Spoof Security Alerting",               "new_id": "T1685.003", "new_name": "Modify or Spoof Tool UI",              "relationship": "reissued_renamed" },
+    { "old_id": "T1562.012", "old_name": "Disable or Modify Linux Audit System",  "new_id": "T1685.004", "new_name": "Disable or Modify Linux Audit System Log", "relationship": "reissued" },
+    { "old_id": "T1070.001", "old_name": "Clear Windows Event Logs",              "new_id": "T1685.005", "new_name": "Clear Windows Event Logs",             "relationship": "moved_from_T1070" },
+    { "old_id": "T1070.002", "old_name": "Clear Linux or Mac System Logs",        "new_id": "T1685.006", "new_name": "Clear Linux or Mac System Logs",       "relationship": "moved_from_T1070" },
+    { "old_id": "T1562.004", "old_name": "Disable or Modify System Firewall",     "new_id": "T1686",     "new_name": "Disable or Modify System Firewall",   "relationship": "promoted_to_technique" },
+    { "old_id": "T1562.007", "old_name": "Disable or Modify Cloud Firewall",      "new_id": "T1686.001", "new_name": "Cloud Firewall",                      "relationship": "reissued" },
+    { "old_id": null,        "old_name": null,                                    "new_id": "T1686.002", "new_name": "Network Device Firewall",             "relationship": "new" },
+    { "old_id": "T1562.004", "old_name": "Disable or Modify System Firewall (Windows-specific content)", "new_id": "T1686.003", "new_name": "Windows Host Firewall", "relationship": "reissued" },
+    { "old_id": null,        "old_name": null,                                    "new_id": "T1687",     "new_name": "Exploitation for Defense Impairment", "relationship": "new" },
+    { "old_id": "T1562.009", "old_name": "Safe Mode Boot",                        "new_id": "T1688",     "new_name": "Safe Mode Boot",                      "relationship": "promoted_to_technique" },
+    { "old_id": "T1562.010", "old_name": "Downgrade Attack",                      "new_id": "T1689",     "new_name": "Downgrade Attack",                    "relationship": "promoted_to_technique" },
+    { "old_id": "T1562.003", "old_name": "Impair Command History Logging",        "new_id": "T1690",     "new_name": "Prevent Command History Logging",     "relationship": "promoted_renamed" }
+  ],
+  "new_techniques": [
+    {
+      "id": "T1685",
+      "name": "Disable or Modify Tools",
+      "tactic": "TA0112",
+      "sub_techniques": [
+        { "id": "T1685.001", "name": "Disable or Modify Windows Event Log" },
+        { "id": "T1685.002", "name": "Disable or Modify Cloud Log" },
+        { "id": "T1685.003", "name": "Modify or Spoof Tool UI" },
+        { "id": "T1685.004", "name": "Disable or Modify Linux Audit System Log" },
+        { "id": "T1685.005", "name": "Clear Windows Event Logs" },
+        { "id": "T1685.006", "name": "Clear Linux or Mac System Logs" }
+      ]
+    },
+    {
+      "id": "T1686",
+      "name": "Disable or Modify System Firewall",
+      "tactic": "TA0112",
+      "sub_techniques": [
+        { "id": "T1686.001", "name": "Cloud Firewall" },
+        { "id": "T1686.002", "name": "Network Device Firewall" },
+        { "id": "T1686.003", "name": "Windows Host Firewall" }
+      ]
+    },
+    { "id": "T1687", "name": "Exploitation for Defense Impairment", "tactic": "TA0112", "sub_techniques": [] },
+    { "id": "T1688", "name": "Safe Mode Boot", "tactic": "TA0112", "sub_techniques": [] },
+    { "id": "T1689", "name": "Downgrade Attack", "tactic": "TA0112", "sub_techniques": [] },
+    { "id": "T1690", "name": "Prevent Command History Logging", "tactic": "TA0112", "sub_techniques": [] }
+  ]
+}

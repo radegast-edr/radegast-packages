@@ -10,6 +10,7 @@ Usage:
     python tools/search_sigma.py --id eb2d07d4 --os windows
     python tools/search_sigma.py --stats
     python tools/search_sigma.py --stats --os windows
+    python tools/search_sigma.py --technique T1059 --csv matches.csv
 
 Options:
     --description TEXT          Substring to match against the 'description' field
@@ -21,11 +22,13 @@ Options:
                                 (choices: windows linux macos; default: all)
     --case-sensitive            Disable case-folding (default: case-insensitive)
     --stats                     Print rule counts grouped by severity and tactic
+    --csv PATH                   Also write matched rules to a CSV file (ignored with --stats)
 """
 
 from __future__ import annotations
 
 import argparse
+import csv
 import re
 import sys
 from collections import defaultdict
@@ -171,6 +174,20 @@ def print_match(path: Path, doc: dict) -> None:
     print()
 
 
+CSV_FIELDS = ["title", "id", "description", "level", "tags", "path"]
+
+
+def rule_csv_row(path: Path, doc: dict) -> dict[str, object]:
+    return {
+        "title": doc.get("title", ""),
+        "id": doc.get("id", ""),
+        "description": doc.get("description", ""),
+        "level": doc.get("level", ""),
+        "tags": ";".join(doc.get("tags") or []),
+        "path": str(path.relative_to(REPO_ROOT)),
+    }
+
+
 # --------------------------------------------------------------------------- #
 # CLI
 # --------------------------------------------------------------------------- #
@@ -217,6 +234,15 @@ def parse_args() -> argparse.Namespace:
         action="store_true",
         help="Print rule counts grouped by severity and tactic, then exit",
     )
+    parser.add_argument(
+        "--csv",
+        dest="csv_path",
+        type=Path,
+        metavar="PATH",
+        default=None,
+        help="Also write matched rules to this CSV file (columns: title, id, description, "
+        "level, tags, path). Ignored when combined with --stats.",
+    )
     return parser.parse_args()
 
 
@@ -235,13 +261,23 @@ def main() -> None:
         sys.exit(1)
 
     count = 0
+    csv_rows: list[dict[str, object]] = []
 
     for path, doc in iter_rules(target_os):
         if matches(doc, args):
             count += 1
             print_match(path, doc)
+            if args.csv_path:
+                csv_rows.append(rule_csv_row(path, doc))
 
     print(f"--- {count} rule(s) matched ---")
+
+    if args.csv_path:
+        with args.csv_path.open("w", newline="", encoding="utf-8") as f:
+            writer = csv.DictWriter(f, fieldnames=CSV_FIELDS)
+            writer.writeheader()
+            writer.writerows(csv_rows)
+        print(f"Wrote {len(csv_rows)} row(s) to {args.csv_path}", file=sys.stderr)
 
 
 if __name__ == "__main__":
