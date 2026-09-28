@@ -11,6 +11,8 @@ Usage:
     python tools/populate_pack.py --os windows --level high critical --tactic execution --pack essential --sync
     python tools/populate_pack.py --os windows --technique T1059 --pack hunting
     python tools/populate_pack.py --os windows --technique T1059.001 T1078 --pack hunting
+    python tools/populate_pack.py --os windows --all --pack full
+    python tools/populate_pack.py --os windows linux macos --all --pack full --sync
 
 Options:
     --os OS [OS ...]                  Source OS(es) (windows, linux, macos; default: windows)
@@ -21,6 +23,8 @@ Options:
                                       Case-insensitive. A parent ID (T1059) also matches sub-techniques.
     --description TEXT                Substring match against rule description
     --tag TAG [TAG ...]               Rule must carry all listed tags (exact match)
+    --all                             Match every rule for the target OS(es), ignoring all other filters.
+                                      Use to populate a pack with the complete detection set per OS.
     --case-sensitive                  Disable case-folding for text searches (default: insensitive)
     --dry-run                         Print matches without copying files or modifying pack.yml
     --no-update-pack-yml              Skip updating pack.yml (default: update is enabled)
@@ -75,6 +79,9 @@ def iter_rules(target_os: tuple[str, ...]):
 
 
 def matches_criteria(doc: dict, args: argparse.Namespace) -> bool:
+    if args.all:
+        return True
+
     cs = args.case_sensitive
 
     if args.level:
@@ -372,6 +379,11 @@ def parse_args() -> argparse.Namespace:
         help="Rule must carry all listed tags (exact match, e.g. attack.t1059.001)",
     )
     parser.add_argument(
+        "--all",
+        action="store_true",
+        help="Match every rule for the target OS(es), ignoring all other filters (populate a pack with all detections)",
+    )
+    parser.add_argument(
         "--case-sensitive",
         action="store_true",
         help="Disable case-folding for text searches (default: insensitive)",
@@ -418,8 +430,8 @@ def main() -> None:
     args = parse_args()
     target_os = tuple(args.os)
 
-    if not any([args.level, args.tactic, args.technique, args.description, args.tag]):
-        print("Error: at least one filter is required (--level, --tactic, --technique, --description, --tag).")
+    if not args.all and not any([args.level, args.tactic, args.technique, args.description, args.tag]):
+        print("Error: at least one filter is required (--level, --tactic, --technique, --description, --tag, --all).")
         print("Run with --help for usage.")
         sys.exit(1)
 
