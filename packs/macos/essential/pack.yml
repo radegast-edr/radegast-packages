@@ -1,0 +1,162 @@
+name: MacOS Essential (non-domain)
+id: macos-essential (non-domain)
+description: "Essential pack for MacOS"
+os: macos
+level: essential
+pack_schema_version: 1
+requires_rustinel: ">=1.0.2"
+default: false
+expected_false_positive_level: low
+status: stable
+license: DRL-1.1
+extends: []
+attack_coverage:
+  - T1016
+  - T1018
+  - T1027
+  - T1027.001
+  - T1030
+  - T1036.003
+  - T1036.006
+  - T1037.005
+  - T1040
+  - T1046
+  - T1049
+  - T1053.003
+  - T1056.002
+  - T1059
+  - T1059.002
+  - T1059.007
+  - T1069.001
+  - T1070.006
+  - T1071
+  - T1071.001
+  - T1078
+  - T1078.001
+  - T1078.003
+  - T1082
+  - T1083
+  - T1087.001
+  - T1105
+  - T1113
+  - T1115
+  - T1133
+  - T1136.001
+  - T1137.002
+  - T1140
+  - T1189
+  - T1203
+  - T1204
+  - T1204.001
+  - T1204.002
+  - T1218
+  - T1219.002
+  - T1490
+  - T1497.001
+  - T1518.001
+  - T1529
+  - T1543.001
+  - T1543.004
+  - T1546.014
+  - T1552.001
+  - T1552.003
+  - T1553
+  - T1553.001
+  - T1555.001
+  - T1560.001
+  - T1564.002
+  - T1564.004
+  - T1566
+  - T1566.001
+  - T1566.002
+  - T1569.001
+  - T1685
+  - T1685.006
+tactic_coverage:
+  - collection
+  - command-and-control
+  - credential-access
+  - defense-impairment
+  - discovery
+  - execution
+  - exfiltration
+  - impact
+  - initial-access
+  - persistence
+  - privilege-escalation
+  - stealth
+test_status: none
+rules:
+    has:
+        sigma:
+          - 23c43900-e732-45a4-8354-63e4a6c187ce     # MacOS Emond Launch Daemon
+          - dfe8b941-4e54-4242-b674-6b613d521962     # Startup Item File Created - MacOS
+          - 1bc2e6c5-0885-472b-bed6-be5ea8eace55     # MacOS Scripting Interpreter AppleScript
+          - 719c22d7-c11a-4f2c-93a6-2cfdd5412f68     # Decode Base64 Encoded Text -MacOs
+          - 95361ce5-c891-4b0a-87ca-e24607884a96     # Binary Padding - MacOS
+          - 88c0f9d8-30a8-4120-bb6b-ebb54abcf2a0     # File Time Attribute Change
+          - 3b2c1059-ae5f-40b6-b5d4-6106d3ac20fe     # Hidden Flag Set On File/Directory Via Chflags - MacOS
+          - acf61bd8-d814-4272-81f0-a7a269aa69aa     # Indicator Removal on Host - Clear Mac System Logs
+          - 7794fa3c-edea-4cff-bec7-267dd4770fd7     # Clipboard Access Via OSAScript
+          - 51719bf5-e4fd-4e44-8ba8-b830e7ac0731     # Creation Of A Local User Account
+          - b22a5b36-2431-493a-8be1-0bae56c28ef3     # Hidden User Creation
+          - b120b587-a4c2-4b94-875d-99c9807d6955     # Credentials from Password Stores - Keychain
+          - 3603f18a-ec15-43a1-9af2-d196c8a7fec6     # System Integrity Protection (SIP) Disabled
+          - 53821412-17b0-4147-ade0-14faae67d54b     # System Integrity Protection (SIP) Enumeration
+          - ff39f1a6-84ac-476f-a1af-37fcdf53d7c0     # Disable Security Tools
+          - b743623c-2776-40e0-87b1-682b975d0ca5     # User Added To Admin Group Via Dscl
+          - 5d0fdb62-f225-42fb-8402-3dfe64da468a     # User Added To Admin Group Via DseditGroup
+          - 821bcf4d-46c7-4b87-bc57-9509d3ba7c11     # Root Account Enable Via Dsenableroot
+          - 089dbdf6-b960-4bcc-90e3-ffc3480c20f6     # File and Directory Discovery - MacOS
+          - 53b1b378-9b06-4992-b972-dde6e423d2b4     # Credentials In Files
+          - 60f1ce20-484e-41bd-85f4-ac4afec2c541     # GUI Input Capture - macOS
+          - 1cf98dc2-fcb0-47c9-8aea-654c9284d1ae     # Disk Image Creation Via Hdiutil - MacOS
+          - bf241472-f014-4f01-a869-96f99330ca8c     # Disk Image Mounting Via Hdiutil - MacOS
+          - e0cfaecd-602d-41af-988d-f6ccebb2af26     # Suspicious Installer Package Child Process
+          - 2d5e7a8b-f484-4a24-945d-7f0efd52eab0     # System Information Discovery Using Ioreg
+          - 2316929c-01aa-438c-970f-099145ab1ee6     # JAMF MDM Potential Suspicious Child Process
+          - be2e3a5c-9cc7-4d02-842a-68e9cb26ec49     # JAMF MDM Execution
+          - f1408a58-0e94-4165-b80a-da9f96cf6fc3     # JXA In-memory Execution Via OSAScript
+          - ae9d710f-dcd1-4f75-a0a5-93a73b5dda0e     # Launch Agent/Daemon Execution Via Launchctl
+          - ddf36b67-e872-4507-ab2e-46bda21b842c     # Local System Accounts Discovery - MacOs
+          - 89bb1f97-c7b9-40e8-b52b-7d6afbd67276     # Local Groups Discovery - MacOs
+          - 84bae5d4-b518-4ae0-b331-6d4afd34d00f     # MacOS Network Service Scanning
+          - adc9bcc4-c39c-4f6b-a711-1884017bf043     # Network Sniffing - MacOs
+          - 6d8a7cf1-8085-423b-b87d-7e880faabbdf     # File Download Via Nscurl - MacOS
+          - 69483748-1525-4a6c-95ca-90dc8d431b68     # Suspicious Microsoft Office Child Process - MacOS
+          - b9d9b652-d8ed-4697-89a2-a1186ee680ac     # OSACompile Run-Only Execution
+          - 234dc5df-40b5-49d1-bf53-0d44ce778eca     # Payload Decoded and Decrypted via Built-in Utilities
+          - 65d506d3-fcfe-4071-b4b2-bcefe721bbbb     # Potential Persistence Via PlistBuddy
+          - 22c45af6-f590-4d44-bab3-b5b2d2a2b6d9     # Remote Access Tool - Potential MeshAgent Execution - MacOS
+          - bd3b5eaa-439d-4a42-8f35-a49f5c8a2582     # Remote Access Tool - Renamed MeshAgent Execution - MacOS
+          - f459ccb4-9805-41ea-b5b2-55e279e2424a     # Remote Access Tool - Team Viewer Session Started On MacOS Host
+          - 10227522-8429-47e6-a301-f2b2d014e7ad     # Macos Remote System Discovery
+          - 7c3b43d8-d794-47d2-800a-d277715aa460     # Scheduled Cron Task/Job - MacOs
+          - 0877ed01-da46-4c49-8476-d49cdd80dfa7     # Screen Capture - macOS
+          - 0ed75b9c-c73b-424d-9e7d-496cd565fbe0     # Security Software Discovery - MacOs
+          - b6e2a2e3-2d30-43b1-a4ea-071e36595690     # Space After Filename - macOS
+          - 7f2bb9d5-6395-4de5-969c-70c11fbe6b12     # Split A File Into Pieces
+          - 0250638a-2b28-4541-86fc-ea4c558fa0c6     # Suspicious Browser Child Process - MacOS
+          - 6e4dcdd1-e48b-42f7-b2d8-3b413fc58cb4     # Suspicious Execution via macOS Script Editor
+          - 85de3a19-b675-4a51-bfc6-b11a5186c971     # Potential Discovery Activity Using Find - MacOS
+          - 508a9374-ad52-4789-b568-fc358def2c65     # Suspicious History File Operations
+          - 13db8d2e-7723-4c2c-93c1-a4d36994f7ef     # Potential In-Memory Download And Compile Of Payloads
+          - 7ed2c9f7-c59d-4c82-a7e2-f859aa676099     # Suspicious MacOS Firmware Activity
+          - 58800443-f9fc-4d55-ae0c-98a3966dfb97     # System Network Discovery - macOS
+          - a753a6af-3126-426d-8bd0-26ebbcb92254     # Osacompile Execution By Potentially Suspicious Applet/Osascript
+          - 5de06a6f-673a-4fc0-8d48-bcfe3837b033     # System Information Discovery Using sw_vers
+          - 652c098d-dc11-4ba6-8566-c20e89042f2b     # User Added To Admin Group Via Sysadminctl
+          - d7329412-13bd-44ba-a072-3387f804a106     # Guest Account Enabled Via Sysadminctl
+          - 6ff08e55-ea53-4f27-94a1-eff92e6d9d5c     # System Information Discovery Via Sysctl - MacOS
+          - 9a7a0393-2144-4626-9bf1-7c2f5a7321db     # System Network Connections Discovery - MacOs
+          - 4809c683-059b-4935-879d-36835986f8cf     # System Information Discovery Using System_Profiler
+          - 40b1fbe2-18ea-4ee7-be47-0294285811de     # System Shutdown/Reboot - MacOs
+          - 09a910bf-f71f-4737-9c40-88880ba5913d     # Potential Base64 Decoded From Images
+          - 452df256-da78-427a-866f-49fa04417d74     # Time Machine Backup Deletion Attempt Via Tmutil - MacOS
+          - 2c95fa8a-8b8d-4787-afce-7117ceb8e3da     # Time Machine Backup Disabled Via Tmutil - MacOS
+          - 9acf45ed-3a26-4062-bf08-56857613eb52     # New File Exclusion Added To Time Machine Via Tmutil - MacOS
+          - f68c4a4f-19ef-4817-952c-50dce331f4b0     # Potential WizardUpdate Malware Infection
+          - f5141b6d-9f42-41c6-a7bf-2a780678b29b     # Gatekeeper Bypass via Xattr
+          - 47d65ac0-c06f-4ba2-a2e3-d263139d0f51     # Potential XCSSET Malware Infection
+        ioc:
+          - ioc-eicar-test     # EICAR test file (MD5)
