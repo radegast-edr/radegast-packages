@@ -6,10 +6,19 @@ name: Pack Sync
 # against packs-dev instead of master, so sigma-driven changes go through
 # the same packs-dev -> pack-pr -> master -> pack-release staging path as
 # manually-edited packs, rather than going straight to production.
+#
+# The push trigger below is a safety net: if a rules/sigma/** PR gets merged
+# to master without ever going through a submitted review (so the
+# pull_request_review trigger never fires -- e.g. an admin merge), this
+# catches the drift after the fact instead of silently leaving packs stale.
 
 on:
   pull_request_review:
     types: [submitted]
+  push:
+    branches: [master]
+    paths:
+      - "rules/sigma/**"
   workflow_dispatch:
     inputs:
       pr_number:
@@ -23,7 +32,7 @@ permissions:
 
 jobs:
   discover:
-    if: github.event_name == 'workflow_dispatch' || github.event.review.state == 'approved'
+    if: github.event_name == 'workflow_dispatch' || github.event_name == 'push' || github.event.review.state == 'approved'
     runs-on: ubuntu-latest
     outputs:
       packs: ${{ steps.discover.outputs.packs }}
@@ -35,13 +44,22 @@ jobs:
       - name: Resolve PR
         id: resolve
         run: |
-          NUMBER="${{ github.event_name == 'workflow_dispatch' && inputs.pr_number || github.event.pull_request.number }}"
-          PR_JSON=$(gh pr view "$NUMBER" --repo "$GITHUB_REPOSITORY" --json number,headRefOid,baseRefOid,baseRefName)
+          if [ "${{ github.event_name }}" = "push" ]; then
+            # No PR in hand -- look up the PR this push merged from (for naming/messages only).
+            NUMBER=$(gh api "repos/$GITHUB_REPOSITORY/commits/${{ github.sha }}/pulls" --jq '.[0].number // "N/A"')
+            echo "number=$NUMBER" >> "$GITHUB_OUTPUT"
+            echo "head_sha=${{ github.sha }}" >> "$GITHUB_OUTPUT"
+            echo "base_sha=${{ github.event.before }}" >> "$GITHUB_OUTPUT"
+            echo "relevant=true" >> "$GITHUB_OUTPUT"
+          else
+            NUMBER="${{ github.event_name == 'workflow_dispatch' && inputs.pr_number || github.event.pull_request.number }}"
+            PR_JSON=$(gh pr view "$NUMBER" --repo "$GITHUB_REPOSITORY" --json number,headRefOid,baseRefOid,baseRefName)
 
-          echo "number=$NUMBER" >> "$GITHUB_OUTPUT"
-          echo "head_sha=$(jq -r '.headRefOid' <<< "$PR_JSON")" >> "$GITHUB_OUTPUT"
-          echo "base_sha=$(jq -r '.baseRefOid' <<< "$PR_JSON")" >> "$GITHUB_OUTPUT"
-          echo "relevant=$([ "$(jq -r '.baseRefName' <<< "$PR_JSON")" = "master" ] && echo true || echo false)" >> "$GITHUB_OUTPUT"
+            echo "number=$NUMBER" >> "$GITHUB_OUTPUT"
+            echo "head_sha=$(jq -r '.headRefOid' <<< "$PR_JSON")" >> "$GITHUB_OUTPUT"
+            echo "base_sha=$(jq -r '.baseRefOid' <<< "$PR_JSON")" >> "$GITHUB_OUTPUT"
+            echo "relevant=$([ "$(jq -r '.baseRefName' <<< "$PR_JSON")" = "master" ] && echo true || echo false)" >> "$GITHUB_OUTPUT"
+          fi
 
       - uses: actions/checkout@v4
         if: steps.resolve.outputs.relevant == 'true'
@@ -68,7 +86,11 @@ jobs:
             exit 0
           fi
 
-          CHANGED=$(git diff --name-only "${{ steps.resolve.outputs.base_sha }}" "${{ steps.resolve.outputs.head_sha }}" -- rules/sigma/ | wc -l)
+          BASE_SHA="${{ steps.resolve.outputs.base_sha }}"
+          if [ "$BASE_SHA" = "0000000000000000000000000000000000000000" ]; then
+            BASE_SHA=$(git rev-parse "${{ steps.resolve.outputs.head_sha }}~1")
+          fi
+          CHANGED=$(git diff --name-only "$BASE_SHA" "${{ steps.resolve.outputs.head_sha }}" -- rules/sigma/ | wc -l)
           if [ "$CHANGED" -eq 0 ]; then
             echo "PR #${{ steps.resolve.outputs.number }} does not touch rules/sigma/; skipping."
             echo "packs=[]" >> "$GITHUB_OUTPUT"
