@@ -61,13 +61,13 @@ jobs:
             echo "relevant=$([ "$(jq -r '.baseRefName' <<< "$PR_JSON")" = "master" ] && echo true || echo false)" >> "$GITHUB_OUTPUT"
           fi
 
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262  # v4
         if: steps.resolve.outputs.relevant == 'true'
         with:
           ref: ${{ steps.resolve.outputs.head_sha }}
           fetch-depth: 0
 
-      - uses: astral-sh/setup-uv@v5
+      - uses: astral-sh/setup-uv@d4b2f3b6ecc6e67c4457f6d3e41ec42d3d0fcb86  # v5
         if: steps.resolve.outputs.relevant == 'true'
 
       - name: Install dependencies
@@ -119,11 +119,11 @@ jobs:
       BRANCH: pack-sync/${{ matrix.os }}-${{ matrix.pack }}
       SIGMA_PR: ${{ needs.discover.outputs.pr_number }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262  # v4
         with:
           ref: ${{ needs.discover.outputs.head_sha }}
 
-      - uses: astral-sh/setup-uv@v5
+      - uses: astral-sh/setup-uv@d4b2f3b6ecc6e67c4457f6d3e41ec42d3d0fcb86  # v5
 
       - name: Install dependencies
         run: uv sync
