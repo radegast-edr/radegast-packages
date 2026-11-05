@@ -1,0 +1,36 @@
+name: Socket Fix
+on:
+  schedule:
+    - cron: '11 8 * * *'
+    - cron: '22 20 * * *'
+  workflow_dispatch:
+    inputs:
+      min_severity:
+        description: Minimum advisory severity to fix
+        type: choice
+        options: [low, medium, high, critical]
+        default: low
+
+permissions:
+  contents: write
+  pull-requests: write
+jobs:
+  socket-fix:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/create-github-app-token@64ab729a6294000f5aa4a4bc0b73d1f32bc45510 # v3
+        id: app-token
+        with:
+          client-id: ${{ vars.APP_CLIENT_ID }}
+          private-key: ${{ secrets.APP_PRIVATE_KEY }}
+      - name: Checkout repo
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5
+        with:
+          token: ${{ steps.app-token.outputs.token }}
+
+      - name: Run Socket Fix
+        uses: radegast-edr/radegast-console-backend/.github/actions/socket-fix@5319e5b9975e8d859be37f77d6a18ab5109e8b3b
+        with:
+          github-token: ${{ steps.app-token.outputs.token }}
+          socket-api-token: ${{ secrets.SOCKET_CLI_API_TOKEN }}
+          min-severity: ${{ inputs.min_severity }}
