@@ -28,12 +28,6 @@ jobs:
         with:
           token: ${{ steps.app-token.outputs.token }}
 
-      # TEMP: troubleshoot "Push failed" from socket fix; remove once resolved
-      - name: Debug push permission
-        run: |
-          git push origin HEAD:refs/heads/socket-push-test
-          git push origin --delete socket-push-test
-
       - name: Run Socket Fix
         uses: radegast-edr/radegast-console-backend/.github/actions/socket-fix@5319e5b9975e8d859be37f77d6a18ab5109e8b3b
         with:
